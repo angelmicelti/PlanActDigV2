@@ -19,12 +19,23 @@
 body,header,nav,.portal-inicio,.ambito-card,.detalle-linea,.linea-badge,.tarea-item,.btn-primary,.nav-btn,.section-title,.info-card,.filtro-btn.active,.gestion-btn.cursos,.gestion-btn.datos,.add-linea-btn,.resp-chip.selected,.course-select{transition:background-color .5s ease,border-color .5s ease,color .3s ease,box-shadow .5s ease}
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
 body{background:linear-gradient(135deg,#f5f7fa 0%,#e4e8ed 100%);color:#333;line-height:1.6;min-height:100vh}
-.portal-inicio{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--gradient);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;color:#fff;z-index:1000;cursor:pointer;padding:2rem;transition:opacity .5s ease}
+.portal-inicio{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--gradient);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;color:#fff;z-index:1000;cursor:pointer;padding:2rem;transition:opacity .5s ease;overflow:hidden}
 .portal-inicio.fade-out{opacity:0;pointer-events:none}
-.portal-titulo{font-size:4rem;font-weight:700;margin-bottom:1rem;text-shadow:0 4px 8px rgba(0,0,0,.3);line-height:1.2}
-.portal-subtitulo{font-size:2.5rem;font-weight:500;margin-bottom:2rem;text-shadow:0 2px 4px rgba(0,0,0,.3)}
-.portal-curso{font-size:2rem;font-weight:400;margin-bottom:3rem;text-shadow:0 2px 4px rgba(0,0,0,.3)}
-.portal-instruccion{position:absolute;bottom:2rem;font-size:1.2rem;opacity:.8;animation:pulse 2s infinite}
+.portal-inicio .portal-bg-shape{position:absolute;border-radius:50%;background:rgba(255,255,255,.04);pointer-events:none}
+.portal-inicio .portal-bg-shape:nth-child(1){width:300px;height:300px;top:-80px;right:-80px;animation:portalFloat 8s ease-in-out infinite}
+.portal-inicio .portal-bg-shape:nth-child(2){width:200px;height:200px;bottom:-60px;left:-60px;animation:portalFloat 6s ease-in-out infinite 1s}
+.portal-inicio .portal-bg-shape:nth-child(3){width:150px;height:150px;top:40%;left:10%;animation:portalFloat 10s ease-in-out infinite 2s}
+@keyframes portalFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-30px) scale(1.05)}}
+.portal-titulo{font-size:3.6rem;font-weight:700;margin-bottom:.8rem;text-shadow:0 4px 8px rgba(0,0,0,.3);line-height:1.2;opacity:0;animation:portalSlideUp .8s ease forwards .2s}
+.portal-subtitulo{font-size:2.2rem;font-weight:500;margin-bottom:1.5rem;text-shadow:0 2px 4px rgba(0,0,0,.3);opacity:0;animation:portalSlideUp .8s ease forwards .5s}
+.portal-curso{font-size:2.8rem;font-weight:600;margin-bottom:1.5rem;text-shadow:0 2px 4px rgba(0,0,0,.3);opacity:0;animation:portalSlideUp .8s ease forwards .8s;letter-spacing:.05em}
+.portal-instruccion{opacity:0;animation:portalFadeIn .6s ease forwards 1.2s;font-size:.95rem;color:rgba(255,255,255,.7);position:absolute;bottom:1.5rem}
+.portal-instruccion .portal-tap-hint{animation:pulse 2s infinite}
+@keyframes portalSlideUp{0%{opacity:0;transform:translateY(25px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes portalFadeIn{0%{opacity:0}100%{opacity:1}}
+.portal-progress{position:absolute;bottom:0;left:0;height:4px;background:rgba(255,255,255,.5);border-radius:0 2px 2px 0;width:0;transition:none}
+.portal-progress.active{animation:portalProgress 5s linear forwards}
+@keyframes portalProgress{0%{width:0}100%{width:100%}}
 @keyframes pulse{0%{opacity:.6}50%{opacity:1}100%{opacity:.6}}
 .theme-indicator{position:fixed;bottom:1rem;left:1rem;z-index:5000;display:flex;align-items:center;gap:.4rem;padding:.3rem .7rem;border-radius:16px;background:var(--primary-color);box-shadow:0 2px 10px rgba(0,0,0,.2);font-size:.7rem;font-weight:600;color:#fff;opacity:.85;transition:all .5s ease;pointer-events:none}
 .theme-indicator i{font-size:.65rem}
@@ -400,10 +411,14 @@ nav{background-color:#fff;padding:1rem;display:flex;justify-content:center;flex-
 
 <!-- Portal de inicio -->
 <div class="portal-inicio" id="portalInicio" style="display:flex">
+  <div class="portal-bg-shape"></div>
+  <div class="portal-bg-shape"></div>
+  <div class="portal-bg-shape"></div>
   <div class="portal-titulo">PLAN DE ACTUACIÓN DIGITAL</div>
   <div class="portal-subtitulo">IES Virgen de Villadiego</div>
   <div class="portal-curso" id="portalCurso">Cargando...</div>
-  <div class="portal-instruccion">Haz clic en cualquier parte para continuar</div>
+  <div class="portal-instruccion"><span class="portal-tap-hint">Haz clic en cualquier parte para continuar</span></div>
+  <div class="portal-progress" id="portalProgress"></div>
 </div>
 
 <!-- Main App -->
@@ -1194,9 +1209,13 @@ async function loadCourses() {
     applyCourseTheme(state.currentCourse);
     document.getElementById('courseSelect').value = state.currentCourse;
     document.getElementById('portalCurso').textContent = 'Curso ' + state.currentCourse;
+    // Apply theme to the portal-inicio dynamically
+    const portal = document.getElementById('portalInicio');
+    if (portal) portal.style.background = 'var(--gradient)';
     await loadGlobalCatalogos();
     await listenToCourseData();
-    enterApp();
+    // Show dynamic portal for 5 seconds, then auto-enter
+    startPortalCountdown();
   } catch (err) {
     console.error('Error loading courses:', err);
     setConnectionStatus(false);
@@ -1268,7 +1287,27 @@ async function listenToCourseData() {
 }
 
 // ==================== NAVIGATION ====================
+var _portalTimer = null;
+
+function startPortalCountdown() {
+  // Clear any previous timer
+  if (_portalTimer) clearTimeout(_portalTimer);
+  // Reset progress bar animation
+  const bar = document.getElementById('portalProgress');
+  if (bar) {
+    bar.classList.remove('active');
+    void bar.offsetWidth; // force reflow
+    bar.classList.add('active');
+  }
+  // Auto-enter after 5 seconds
+  _portalTimer = setTimeout(() => {
+    _portalTimer = null;
+    if (state.currentCourse) enterApp();
+  }, 5000);
+}
+
 function enterApp() {
+  if (_portalTimer) { clearTimeout(_portalTimer); _portalTimer = null; }
   document.getElementById('portalInicio').classList.add('fade-out');
   setTimeout(() => {
     document.getElementById('portalInicio').style.display = 'none';
