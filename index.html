@@ -5,8 +5,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#3498db">
 <meta name="description" content="Plan de Actuación Digital - IES Virgen de Villadiego">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Plan Digital">
 <title>Plan de Actuación Digital - IES Virgen de Villadiego</title>
-<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiUGxhbiBkZSBBY3R1YWNpw7NuIERpZ2l0YWwiLCJzaG9ydF9uYW1lIjoiUGxhbiBEaWdpdGFsIiwic3RhcnRfdXJsIjoiLiIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMzNDk4ZGIiLCJ0aGVtZV9jb2xvciI6IiMzNDk4ZGIifQ==">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="pwa/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="pwa/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="pwa/icons/favicon-16.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
 :root{--primary-color:#3498db;--secondary-color:#2c3e50;--accent-color:#e74c3c;--light-color:#ecf0f1;--dark-color:#34495e;--success-color:#2ecc71;--warning-color:#f39c12;--steam-color:#9b59b6;--steam-light:#bb8fce;--gradient:linear-gradient(135deg,#3498db,#2c3e50);--steam-gradient:linear-gradient(135deg,#9b59b6,#8e44ad);--card-shadow:0 10px 20px rgba(0,0,0,.1);--hover-shadow:0 15px 30px rgba(0,0,0,.15);--theme-name:'Azul'}
@@ -51,7 +57,7 @@ nav{background-color:#fff;padding:1rem;display:flex;justify-content:center;flex-
 .gestion-toggle i{transition:transform .3s}
 .gestion-toggle.open i{transform:rotate(90deg)}
 .gestion-buttons{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem;margin-top:.5rem;max-height:0;overflow:hidden;transition:max-height .3s ease}
-.gestion-buttons.open{max-height:200px}
+.gestion-buttons.open{max-height:600px}
 .gestion-btn{background:#fff;border:none;padding:.7rem 1rem;border-radius:8px;cursor:pointer;font-weight:600;transition:all .3s;display:flex;align-items:center;justify-content:center;gap:.5rem;box-shadow:0 2px 4px rgba(0,0,0,.1)}
 .gestion-btn:hover{transform:translateY(-2px);box-shadow:0 4px 8px rgba(0,0,0,.15)}
 .gestion-btn.consultas{background:var(--success-color);color:#fff}
@@ -354,8 +360,9 @@ nav{background-color:#fff;padding:1rem;display:flex;justify-content:center;flex-
       <div class="auth-icon">
         <i class="fas fa-laptop-code"></i>
       </div>
-      <h2 style="color:var(--secondary-color);font-size:1.4rem;margin-bottom:.3rem">Plan de Actuación Digital</h2>
-      <p style="color:#888;font-size:.85rem">IES Virgen de Villadiego</p>
+      <h2 style="color:var(--secondary-color);font-size:1.4rem;margin-bottom:.3rem;text-align:center;text-transform:uppercase">Plan de Actuación Digital</h2>
+      <p style="color:#888;font-size:.85rem;text-align:center">IES Virgen de Villadiego</p>
+      <p id="authLastCourse" style="color:#555;font-size:.8rem;text-align:center;margin-top:.3rem;display:none"></p>
     </div>
     <div id="authError" class="auth-alert auth-alert-error" style="display:none"></div>
     <div id="authSuccess" class="auth-alert auth-alert-success" style="display:none"></div>
@@ -446,6 +453,9 @@ nav{background-color:#fff;padding:1rem;display:flex;justify-content:center;flex-
       <button class="gestion-btn consultas" onclick="goConsultas()"><i class="fas fa-search"></i> Consultas</button>
       <button class="gestion-btn pdf" onclick="goPdf()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
       <button class="gestion-btn" style="background:#2c3e50;color:#fff" onclick="openUsersModal()"><i class="fas fa-users-cog"></i> Gestión de Usuarios</button>
+      <button class="gestion-btn" style="background:#16a085;color:#fff" onclick="exportJSON()"><i class="fas fa-download"></i> Exportar JSON</button>
+      <button class="gestion-btn" style="background:#8e44ad;color:#fff" onclick="triggerImportJSON()"><i class="fas fa-upload"></i> Importar JSON</button>
+      <input type="file" id="importJsonFile" accept=".json" style="display:none" onchange="handleImportJSON(event)">
     </div>
   </div>
 
@@ -914,7 +924,7 @@ async function seedCourse(cursoId) {
       });
     }
   }
-  await db.collection('planes').doc(cursoId).collection('estadosTareas').doc('global').set({ estados: {} });
+  await db.collection('planes').doc(cursoId).collection('estadosTareas').doc('global').set({ estados: {}, comentarios: {} });
 }
 
 // ==================== CURRENT CURSO ====================
@@ -1059,6 +1069,7 @@ function handleLogout() {
   state._userName = '';
   unsubscribeFns.forEach(fn => fn());
   unsubscribeFns = [];
+  if (state.currentCourse) localStorage.setItem('lastActiveCourse', state.currentCourse);
   state.planData = {};
   state.estadosTareas = {};
   state.comentariosTareas = {};
@@ -1096,8 +1107,7 @@ function applyRoleUI() {
   if (gestionSection) gestionSection.style.display = isAdmin() ? '' : 'none';
   // Hide STEAM nav edit capabilities for viewers
   updateUserBar();
-  // Re-render current view to apply canEdit flags
-  if (state.user) renderView();
+  // Note: renderView() will be called by the caller (enterApp)
 }
 
 async function restoreSession() {
@@ -1215,8 +1225,8 @@ async function listenToCourseData() {
             descripcion: l.descripcion || '',
             tareasFormacion: l.tareasFormacion || [],
             tareasIntervencion: (l.tareasIntervencion || []).map(t => {
-              if (typeof t === 'string') return { texto: t, evaluacion: { responsables: [], herramientas: '', temporalizacion: [] } };
-              return { texto: t.texto || '', evaluacion: t.evaluacion || { responsables: [], herramientas: '', temporalizacion: [] } };
+              if (typeof t === 'string') return { texto: t, evaluacion: { responsables: [], herramientas: [], temporalizacion: [] } };
+              return { texto: t.texto || '', evaluacion: t.evaluacion || { responsables: [], herramientas: [], temporalizacion: [] } };
             }),
             evaluacion: l.evaluacion || { objeto: '', herramientas: '' },
             responsables: l.responsables || [],
@@ -1227,6 +1237,14 @@ async function listenToCourseData() {
       });
       state.planData = data;
       state.loading = false;
+      // Re-sync currentLinea if viewing detalle (prevents stale data from remote edits)
+      if (state.currentLinea && state.viewState === 'detalle') {
+        const ambitoData = state.planData[state.currentAmbitoId];
+        if (ambitoData) {
+          const fresh = ambitoData.lineas.find(l => l.id === state.currentLinea.id);
+          if (fresh) state.currentLinea = fresh;
+        }
+      }
       setConnectionStatus(true);
       renderView();
     }, err => {
@@ -1281,6 +1299,15 @@ function showAuthOverlay() {
   } else {
     document.getElementById('authSetupSection').style.display = 'none';
     btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Iniciar Sesión';
+  }
+  // Show last active course if available
+  const lastCourse = localStorage.getItem('lastActiveCourse');
+  const lastCourseEl = document.getElementById('authLastCourse');
+  if (lastCourseEl && lastCourse) {
+    lastCourseEl.textContent = 'Curso ' + lastCourse;
+    lastCourseEl.style.display = 'block';
+  } else if (lastCourseEl) {
+    lastCourseEl.style.display = 'none';
   }
   // Focus username field
   setTimeout(() => { document.getElementById('authUsername').focus(); }, 100);
@@ -1355,7 +1382,7 @@ function toggleGestion() {
 // ==================== COURSE SELECT ====================
 function renderCourseSelect() {
   const sel = document.getElementById('courseSelect');
-  sel.innerHTML = state.courses.map(c => `<option value="${c}">Curso ${c}</option>`).join('');
+  sel.innerHTML = state.courses.map(c => `<option value="${escapeAttr(c)}">Curso ${escapeHtml(c)}</option>`).join('');
   sel.value = state.currentCourse;
 }
 
@@ -1461,6 +1488,16 @@ function renderDetalle(container) {
     container.innerHTML = '';
     return;
   }
+  // Preserve unsaved comment text across re-renders (e.g. remote snapshot updates)
+  container.querySelectorAll('.tarea-comentario-textarea').forEach(ta => {
+    const match = ta.id.match(/^tareaComentario-(.+)$/);
+    if (match) {
+      const val = ta.value.trim();
+      if (val !== (state.comentariosTareas[match[1]] || '')) {
+        state.comentariosTareas[match[1]] = val;
+      }
+    }
+  });
   const linea = state.currentLinea;
   const ambitoId = state.currentAmbitoId;
 
@@ -1543,7 +1580,8 @@ function renderDetalle(container) {
 
 function buildViewChip(text, chipClass, taskId, fieldType) {
   const canEdit = isAdmin();
-  const actions = canEdit ? `<i class="fas fa-pen eval-chip-edit" onclick="startEditEvalChip('${taskId.replace(/'/g, "\\'")}','${fieldType}','${escapeAttr(text)}')" title="Editar"></i><i class="fas fa-times eval-chip-del" onclick="deleteEvalChip('${taskId.replace(/'/g, "\\'")}','${fieldType}','${escapeAttr(text)}')" title="Eliminar"></i>` : '';
+  const safeText = text.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  const actions = canEdit ? `<i class="fas fa-pen eval-chip-edit" onclick="startEditEvalChip('${taskId.replace(/'/g, "\\'")}','${fieldType}','${safeText}')" title="Editar"></i><i class="fas fa-times eval-chip-del" onclick="deleteEvalChip('${taskId.replace(/'/g, "\\'")}','${fieldType}','${safeText}')" title="Eliminar"></i>` : '';
   return `<span class="eval-chip ${chipClass}" data-value="${escapeAttr(text)}">${escapeHtml(text)}${actions}</span>`;
 }
 
@@ -1841,21 +1879,25 @@ function renderConsultaResultados() {
   Object.entries(state.planData).forEach(([ambitoId, ambito]) => {
     if (state.consultaAmbito !== 'todos' && state.consultaAmbito !== ambitoId) return;
     ambito.lineas.forEach(linea => {
-      const matchResp = state.consultaResponsable === 'todos' || linea.responsables.includes(state.consultaResponsable) || linea.tareasIntervencion.some(t => typeof t === 'object' && t.evaluacion && t.evaluacion.responsables && t.evaluacion.responsables.includes(state.consultaResponsable));
-      const matchTrim = state.consultaTrimestre === 'todos' || linea.temporalizacion.includes(state.consultaTrimestre) || linea.tareasIntervencion.some(t => typeof t === 'object' && t.evaluacion && t.evaluacion.temporalizacion && t.evaluacion.temporalizacion.includes(state.consultaTrimestre));
+      const matchResp = state.consultaResponsable === 'todos' || linea.responsables.includes(state.consultaResponsable) || linea.tareasFormacion.some(t => typeof t === 'object' && t.evaluacion && t.evaluacion.responsables && t.evaluacion.responsables.includes(state.consultaResponsable)) || linea.tareasIntervencion.some(t => typeof t === 'object' && t.evaluacion && t.evaluacion.responsables && t.evaluacion.responsables.includes(state.consultaResponsable));
+      const matchTrim = state.consultaTrimestre === 'todos' || linea.temporalizacion.includes(state.consultaTrimestre) || linea.tareasFormacion.some(t => typeof t === 'object' && t.evaluacion && t.evaluacion.temporalizacion && t.evaluacion.temporalizacion.includes(state.consultaTrimestre)) || linea.tareasIntervencion.some(t => typeof t === 'object' && t.evaluacion && t.evaluacion.temporalizacion && t.evaluacion.temporalizacion.includes(state.consultaTrimestre));
       if (matchResp && matchTrim) {
         if (state.consultaTipo === 'todos' || state.consultaTipo === 'formacion') {
           linea.tareasFormacion.forEach(tarea => {
+            const texto = typeof tarea === 'string' ? tarea : (tarea.texto || '');
+            const ev = typeof tarea === 'object' && tarea.evaluacion ? tarea.evaluacion : {};
+            const respList = (ev.responsables && ev.responsables.length > 0) ? ev.responsables : linea.responsables;
+            const tempList = (ev.temporalizacion && ev.temporalizacion.length > 0) ? ev.temporalizacion : linea.temporalizacion;
             results += `<div class="resultado-item">
-              <h4>${escapeHtml(tarea)}</h4>
+              <h4>${escapeHtml(texto)}</h4>
               <div style="margin-top:.8rem">
                 <span class="badge badge-ambito">${escapeHtml(ambito.titulo)}</span>
                 <span class="badge badge-tipo">Formación</span>
                 ${linea.steam4 ? '<span class="badge badge-steam"><i class="fas fa-robot"></i> STEAM 4.0</span>' : ''}
-                ${linea.temporalizacion.map(t => `<span class="badge badge-trimestre">${escapeHtml(t)}</span>`).join('')}
+                ${tempList.map(t => `<span class="badge badge-trimestre">${escapeHtml(t)}</span>`).join('')}
               </div>
               <p style="margin-top:.8rem"><strong>Línea:</strong> Línea ${linea.id}: ${escapeHtml(linea.titulo)}</p>
-              <p style="margin-top:.5rem"><strong>Responsables:</strong> ${escapeHtml(linea.responsables.join(', '))}</p>
+              <p style="margin-top:.5rem"><strong>Responsables:</strong> ${escapeHtml(respList.join(', '))}</p>
             </div>`;
           });
         }
@@ -1875,7 +1917,7 @@ function renderConsultaResultados() {
               </div>
               <p style="margin-top:.8rem"><strong>Línea:</strong> Línea ${linea.id}: ${escapeHtml(linea.titulo)}</p>
               <p style="margin-top:.5rem"><strong>Responsables:</strong> ${escapeHtml(respList.join(', '))}</p>
-              ${ev.herramientas ? '<p style="margin-top:.3rem"><strong>Herramientas:</strong> ' + escapeHtml(ev.herramientas) + '</p>' : ''}
+              ${ev.herramientas ? '<p style="margin-top:.3rem"><strong>Herramientas:</strong> ' + escapeHtml(Array.isArray(ev.herramientas) ? ev.herramientas.join(', ') : ev.herramientas) + '</p>' : ''}
             </div>`;
           });
         }
@@ -1932,14 +1974,24 @@ function renderPdf(container) {
 
 // ==================== ESTADO CHANGE ====================
 async function handleEstadoChange(taskId, estado) {
+  const oldEstado = state.estadosTareas[taskId] || 'no-iniciado';
   const newEstados = { ...state.estadosTareas, [taskId]: estado };
   state.estadosTareas = newEstados;
   try {
-    await db.collection('planes').doc(state.currentCourse).collection('estadosTareas').doc('global').set({ estados: newEstados, comentarios: state.comentariosTareas });
+    await db.collection('planes').doc(state.currentCourse).collection('estadosTareas').doc('global').set({ estados: newEstados, comentarios: state.comentariosTareas }, { merge: true });
+    renderView();
   } catch (err) {
     console.error('Error saving estado:', err);
+    // Rollback optimistic update
+    state.estadosTareas[taskId] = oldEstado;
+    renderView();
+    // Show error toast AFTER renderView so it's not destroyed
+    const fb = document.createElement('div');
+    fb.style.cssText = 'position:fixed;top:1rem;left:50%;transform:translateX(-50%);padding:.5rem 1rem;border-radius:8px;background:#f8d7da;color:#721c24;font-weight:600;font-size:.85rem;z-index:5000;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:feedbackFade 2s ease forwards';
+    fb.innerHTML = '<i class="fas fa-times-circle"></i> Error al guardar estado';
+    document.body.appendChild(fb);
+    setTimeout(() => fb.remove(), 2200);
   }
-  renderView();
 }
 
 // ==================== COMENTARIO CHANGE ====================
@@ -1956,6 +2008,13 @@ async function handleComentarioChange(taskId, value) {
     await db.collection('planes').doc(state.currentCourse).collection('estadosTareas').doc('global').set({ estados: state.estadosTareas, comentarios: newComentarios }, { merge: true });
   } catch (err) {
     console.error('Error saving comentario:', err);
+    const ta = document.getElementById('tareaComentario-' + taskId);
+    if (ta) ta.style.borderColor = 'var(--accent-color)';
+    const fb = document.createElement('div');
+    fb.style.cssText = 'position:fixed;top:1rem;left:50%;transform:translateX(-50%);padding:.5rem 1rem;border-radius:8px;background:#f8d7da;color:#721c24;font-weight:600;font-size:.85rem;z-index:5000;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:feedbackFade 2s ease forwards';
+    fb.innerHTML = '<i class="fas fa-times-circle"></i> Error al guardar comentario';
+    document.body.appendChild(fb);
+    setTimeout(() => { fb.remove(); if (ta) ta.style.borderColor = ''; }, 2200);
   }
 }
 
@@ -1994,10 +2053,10 @@ function renderCourseListModal() {
           ${isProtected ? '<span class="protected-badge"><i class="fas fa-lock"></i> Original</span>' : ''}
         </div>
         <div class="course-list-actions">
-          <button class="course-action-btn clear" ${isProtected ? 'disabled title="El curso original no se puede borrar"' : `onclick="confirmClearCourse('${curso}')"`} title="Borrar todos los datos del curso">
+          <button class="course-action-btn clear" ${isProtected ? 'disabled title="El curso original no se puede borrar"' : `onclick="confirmClearCourse('${jsEscape(curso)}')"`} title="Borrar todos los datos del curso">
             <i class="fas fa-eraser"></i> Borrar datos
           </button>
-          <button class="course-action-btn delete" ${isProtected ? 'disabled title="El curso original no se puede eliminar"' : `onclick="confirmDeleteCourse('${curso}')"`} title="Eliminar el curso completo">
+          <button class="course-action-btn delete" ${isProtected ? 'disabled title="El curso original no se puede eliminar"' : `onclick="confirmDeleteCourse('${jsEscape(curso)}')"`} title="Eliminar el curso completo">
             <i class="fas fa-trash"></i> Eliminar
           </button>
         </div>
@@ -2064,7 +2123,7 @@ async function executeCourseAction() {
           lineas: []
         });
       }
-      await db.collection('planes').doc(courseId).collection('estadosTareas').doc('global').set({ estados: {} });
+      await db.collection('planes').doc(courseId).collection('estadosTareas').doc('global').set({ estados: {}, comentarios: {} });
 
       // If we're viewing this course, refresh
       if (state.currentCourse === courseId) {
@@ -2092,13 +2151,21 @@ async function createEmptyCourse(cursoId) {
       lineas: []
     });
   }
-  await db.collection('planes').doc(cursoId).collection('estadosTareas').doc('global').set({ estados: {} });
+  await db.collection('planes').doc(cursoId).collection('estadosTareas').doc('global').set({ estados: {}, comentarios: {} });
 }
 
 async function handleCreateCourse() {
   const name = document.getElementById('newCourseInput').value.trim();
   if (!name) return;
   const msgEl = document.getElementById('courseModalMessage');
+  if (!/^\d{4}-\d{4}$/.test(name)) {
+    msgEl.innerHTML = '<div class="modal-message error">Usa el formato YYYY-YYYY (ej: 2026-2027)</div>';
+    return;
+  }
+  if (/[\/\\.~]/.test(name)) {
+    msgEl.innerHTML = '<div class="modal-message error">El nombre contiene caracteres no permitidos</div>';
+    return;
+  }
   try {
     const doc = await db.collection('planes').doc(name).get();
     if (doc.exists) {
@@ -2289,13 +2356,13 @@ async function saveNewActuacion() {
     if (tipo === 'formacion') {
       const newFormAct = {
         texto: enunciado,
-        evaluacion: { responsables: [], herramientas: '', temporalizacion: [] }
+        evaluacion: { responsables: [], herramientas: [], temporalizacion: [] }
       };
       lineas[lineaIdx].tareasFormacion = [...(lineas[lineaIdx].tareasFormacion || []), newFormAct];
     } else {
       const newAct = {
         texto: enunciado,
-        evaluacion: { responsables: [], herramientas: '', temporalizacion: [] }
+        evaluacion: { responsables: [], herramientas: [], temporalizacion: [] }
       };
       lineas[lineaIdx].tareasIntervencion = [...(lineas[lineaIdx].tareasIntervencion || []), newAct];
     }
@@ -2345,11 +2412,31 @@ async function deleteLinea() {
 
     const newEstados = { ...state.estadosTareas };
     const newComentarios = { ...state.comentariosTareas };
+    // Delete estados for the removed line and renumber surviving lines
+    const idMapping = {};
+    ambitoData.lineas.forEach(origLinea => {
+      if (origLinea.id === state.editingLinea.id) return;
+      const newId = renumbered.find(l => l.titulo === origLinea.titulo);
+      if (newId && origLinea.id !== newId.id) {
+        idMapping[origLinea.id] = newId.id;
+      }
+    });
     Object.keys(newEstados).forEach(key => {
       const parts = key.split('-');
-      if (parts.length >= 2 && parseInt(parts[1]) === state.editingLinea.id) {
+      const lineId = parts.length >= 2 ? parseInt(parts[1]) : null;
+      if (lineId === state.editingLinea.id) {
         delete newEstados[key];
         delete newComentarios[key];
+      } else if (idMapping[lineId]) {
+        const newKey = key.replace('-' + lineId + '-', '-' + idMapping[lineId] + '-');
+        if (newKey !== key) {
+          newEstados[newKey] = newEstados[key];
+          delete newEstados[key];
+          if (newComentarios[key] !== undefined) {
+            newComentarios[newKey] = newComentarios[key];
+            delete newComentarios[key];
+          }
+        }
       }
     });
     await db.collection('planes').doc(state.currentCourse).collection('estadosTareas').doc('global').set({ estados: newEstados, comentarios: newComentarios });
@@ -2362,6 +2449,11 @@ async function deleteLinea() {
     }
   } catch (err) {
     console.error('Error deleting linea:', err);
+    const fb = document.createElement('div');
+    fb.style.cssText = 'position:fixed;top:1rem;left:50%;transform:translateX(-50%);padding:.5rem 1rem;border-radius:8px;background:#f8d7da;color:#721c24;font-weight:600;font-size:.85rem;z-index:5000;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:feedbackFade 2s ease forwards';
+    fb.innerHTML = '<i class="fas fa-times-circle"></i> Error al eliminar la línea';
+    document.body.appendChild(fb);
+    setTimeout(() => fb.remove(), 2200);
   }
 }
 
@@ -2378,7 +2470,7 @@ function openTransferModal() {
   const targetSel = document.getElementById('transferTargetSelect');
   targetSel.innerHTML = state.courses
     .filter(c => c !== state.currentCourse)
-    .map(c => `<option value="${c}">Curso ${c}</option>`).join('');
+    .map(c => `<option value="${escapeAttr(c)}">Curso ${escapeHtml(c)}</option>`).join('');
 
   renderTransferLines();
   document.getElementById('transferModal').classList.add('active');
@@ -2488,7 +2580,6 @@ async function generarPDF() {
   if (state.pdfIntervencion) tiposSel.push('intervencion');
 
   const rows = [];
-  const estadoLabels = { 'no-iniciado': 'No iniciada', 'en-proceso': 'En proceso', 'conseguido': 'Conseguida' };
 
   ambitosSel.forEach(ambitoId => {
     const ambito = state.planData[ambitoId];
@@ -2499,7 +2590,11 @@ async function generarPDF() {
           const idTarea = `${ambitoId}-${linea.id}-formacion-${index}`;
           const estado = state.estadosTareas[idTarea] || 'no-iniciado';
           if (estadosSel.includes(estado)) {
-            rows.push([ambito.titulo, 'Línea ' + linea.id, tarea, 'Formación', estadoLabels[estado] || estado, linea.responsables.join(', '), linea.temporalizacion.join(', ')]);
+            const texto = typeof tarea === 'string' ? tarea : (tarea.texto || '');
+            const ev = typeof tarea === 'object' && tarea.evaluacion ? tarea.evaluacion : {};
+            const resp = Array.isArray(ev.responsables) ? ev.responsables.join(', ') : (linea.responsables || []).join(', ');
+            const temp = Array.isArray(ev.temporalizacion) ? ev.temporalizacion.join(', ') : (linea.temporalizacion || []).join(', ');
+            rows.push([ambito.titulo, 'Línea ' + linea.id, texto, 'Formación', estado, resp, temp]);
           }
         });
       }
@@ -2510,9 +2605,9 @@ async function generarPDF() {
           if (estadosSel.includes(estado)) {
             const texto = typeof tarea === 'string' ? tarea : tarea.texto;
             const ev = typeof tarea === 'object' && tarea.evaluacion ? tarea.evaluacion : {};
-            const resp = (ev.responsables || []).join(', ') || linea.responsables.join(', ');
-            const temp = (ev.temporalizacion || []).join(', ') || linea.temporalizacion.join(', ');
-            rows.push([ambito.titulo, 'Línea ' + linea.id, texto, 'Actuación', estadoLabels[estado] || estado, resp, temp]);
+            const resp = Array.isArray(ev.responsables) ? ev.responsables.join(', ') : (linea.responsables || []).join(', ');
+            const temp = Array.isArray(ev.temporalizacion) ? ev.temporalizacion.join(', ') : (linea.temporalizacion || []).join(', ');
+            rows.push([ambito.titulo, 'Línea ' + linea.id, texto, 'Actuación', estado, resp, temp]);
           }
         });
       }
@@ -2559,6 +2654,18 @@ async function generarPDF() {
           else if (valor === 'en-proceso') data.cell.styles.textColor = [180, 130, 10];
           else if (valor === 'conseguido') data.cell.styles.textColor = [39, 174, 96];
         }
+      },
+      didDrawCell: function(data) {
+        if (data.section === 'body' && data.column.index === 4) {
+          const estadoLabelMap = { 'no-iniciado': 'No iniciada', 'en-proceso': 'En proceso', 'conseguido': 'Conseguida' };
+          const label = estadoLabelMap[data.cell.raw];
+          if (label && label !== data.cell.raw) {
+            const { x, y, width, height, styles } = data.cell;
+            const doc = data.doc;
+            doc.setFontSize(8);
+            doc.text(label, x + 3, y + height / 2 + 1, { baseline: 'middle' });
+          }
+        }
       }
     });
 
@@ -2594,7 +2701,7 @@ function renderResponsablesSelector() {
     chipsEl.innerHTML = '<span style="color:#aaa;font-size:.85rem;font-style:italic">Ninguno seleccionado — haz clic abajo para añadir</span>';
   } else {
     chipsEl.innerHTML = selected.map(r =>
-      `<button type="button" class="resp-chip selected" onclick="toggleResponsable('${escapeAttr(r)}')" title="Clic para eliminar">
+      `<button type="button" class="resp-chip selected" onclick="toggleResponsable('${jsEscape(r)}')" title="Clic para eliminar">
         ${escapeHtml(r)} <i class="fas fa-times"></i>
       </button>`
     ).join('');
@@ -2606,7 +2713,7 @@ function renderResponsablesSelector() {
   if (available.length > 0) {
     listHtml += '<span class="resp-list-label"><i class="fas fa-plus-circle"></i> Añadir responsable:</span>';
     listHtml += available.map(r =>
-      `<button type="button" class="resp-chip available" onclick="toggleResponsable('${escapeAttr(r)}')" title="Clic para añadir">
+      `<button type="button" class="resp-chip available" onclick="toggleResponsable('${jsEscape(r)}')" title="Clic para añadir">
         ${escapeHtml(r)} <i class="fas fa-check"></i>
       </button>`
     ).join('');
@@ -2729,15 +2836,16 @@ async function saveGlobalCatalogoItem(type, value) {
   const trimmed = value.trim();
   try {
     const docRef = db.collection('planes').doc('_config').collection('catalogos').doc('global');
-    const doc = await docRef.get();
-    let data = doc.exists ? doc.data() : {};
-    let arr = data[type] || [];
-    // Avoid duplicates (case-insensitive)
-    if (!arr.find(v => v.toLowerCase() === trimmed.toLowerCase())) {
-      arr.push(trimmed);
-      data[type] = arr;
-      await docRef.set(data);
-    }
+    await db.runTransaction(async (transaction) => {
+      const doc = await transaction.get(docRef);
+      let data = doc.exists ? doc.data() : {};
+      let arr = data[type] || [];
+      if (!arr.find(v => v.toLowerCase() === trimmed.toLowerCase())) {
+        arr.push(trimmed);
+        data[type] = arr;
+        transaction.set(docRef, data, { merge: true });
+      }
+    });
     // Also update local base arrays
     if (type === 'responsables') {
       if (!RESPONSABLES_BASE.find(v => v.toLowerCase() === trimmed.toLowerCase())) {
@@ -3444,7 +3552,13 @@ function escapeHtml(text) {
 }
 
 function escapeAttr(str) {
-  return str.replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function jsEscape(str) {
+  if (str === null || str === undefined) return '';
+  return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/\r/g, '\\r');
 }
 
 // ==================== USERS MANAGEMENT ====================
@@ -3475,7 +3589,7 @@ function toggleCreateUserForm() {
   var btn = document.getElementById('toggleCreateBtn');
   if (!form || !btn) return;
   var isVisible = form.style.display !== 'none';
-  form.style.display = isVisible ? 'none' : 'grid';
+  form.style.display = isVisible ? 'none' : 'block';
   btn.innerHTML = isVisible
     ? '<i class="fas fa-chevron-down"></i> Crear'
     : '<i class="fas fa-chevron-up"></i> Ocultar';
@@ -3561,11 +3675,12 @@ function loadUsersList() {
 
     if (!isCurrentUser) {
       if (data.role !== 'admin') {
-        html += '<button class="user-mgmt-btn promote" onclick="confirmToggleRole(\'' + uid + '\',\'' + escapeAttr(data.username) + '\',\'admin\')" title="Promover a Admin"><i class="fas fa-crown"></i> Hacer Admin</button>';
+        html += '<button class="user-mgmt-btn promote" onclick="confirmToggleRole(\'' + jsEscape(uid) + '\',\'' + jsEscape(data.username) + '\',\'admin\')" title="Promover a Admin"><i class="fas fa-crown"></i> Hacer Admin</button>';
+
       } else {
-        html += '<button class="user-mgmt-btn demote" onclick="confirmToggleRole(\'' + uid + '\',\'' + escapeAttr(data.username) + '\',\'viewer\')" title="Cambiar a Usuario"><i class="fas fa-eye"></i> Hacer Usuario</button>';
+        html += '<button class="user-mgmt-btn demote" onclick="confirmToggleRole(\'' + jsEscape(uid) + '\',\'' + jsEscape(data.username) + '\',\'viewer\')" title="Cambiar a Usuario"><i class="fas fa-eye"></i> Hacer Usuario</button>';
       }
-      html += '<button class="user-mgmt-btn delete" onclick="confirmDeleteUser(\'' + uid + '\',\'' + escapeAttr(data.name || data.username) + '\')" title="Eliminar usuario"><i class="fas fa-trash"></i></button>';
+      html += '<button class="user-mgmt-btn delete" onclick="confirmDeleteUser(\'' + jsEscape(uid) + '\',\'' + jsEscape(data.name || data.username) + '\')" title="Eliminar usuario"><i class="fas fa-trash"></i></button>';
     } else {
       html += '<span style="font-size:.75rem;color:#aaa;font-style:italic">Tu cuenta</span>';
     }
@@ -3606,6 +3721,7 @@ function executeToggleRole(uid, newRole) {
     state.user.role = newRole;
     sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(state.user));
     applyRoleUI();
+    renderView();
   }
   document.getElementById('usersModalConfirm').innerHTML = '';
   document.getElementById('usersModalMsg').innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#d4edda;color:#155724;font-size:.85rem"><i class="fas fa-check"></i> Rol actualizado correctamente.</div>';
@@ -3637,6 +3753,143 @@ function cancelUserAction() {
   document.getElementById('usersModalConfirm').innerHTML = '';
 }
 
+// ==================== TOAST ====================
+function showToast(message, type) {
+  const colors = { success: '#d4edda', error: '#f8d7da', info: '#d1ecf1' };
+  const textColors = { success: '#155724', error: '#721c24', info: '#0c5460' };
+  const bg = colors[type] || colors.info;
+  const fg = textColors[type] || textColors.info;
+  const fb = document.createElement('div');
+  fb.style.cssText = 'position:fixed;top:1rem;left:50%;transform:translateX(-50%);padding:.6rem 1.2rem;border-radius:8px;background:' + bg + ';color:' + fg + ';font-weight:600;font-size:.9rem;z-index:10000;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:feedbackFade 2.5s ease forwards;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis';
+  fb.textContent = message;
+  document.body.appendChild(fb);
+  setTimeout(() => { if (fb.parentNode) fb.parentNode.removeChild(fb); }, 3000);
+}
+
+// ==================== EXPORT / IMPORT JSON ====================
+async function exportJSON() {
+  try {
+    showToast('Preparando exportación...', 'info');
+    const exportData = {
+      _meta: { exportDate: new Date().toISOString(), appVersion: 'STEAM 4.0' },
+      cursos: {},
+      catalogos: null
+    };
+
+    // Export all courses
+    const coursesSnap = await db.collection('planes').get();
+    const batchPromises = [];
+    coursesSnap.forEach(courseDoc => {
+      const courseId = courseDoc.id;
+      if (courseId === '_config') return; // skip config
+      const p = (async () => {
+        const ambitosSnap = await db.collection('planes').doc(courseId).collection('ambitos').get();
+        const ambitos = {};
+        ambitosSnap.forEach(a => { ambitos[a.id] = a.data(); });
+
+        let estados = {};
+        let comentarios = {};
+        try {
+          const estDoc = await db.collection('planes').doc(courseId).collection('estadosTareas').doc('global').get();
+          if (estDoc.exists) {
+            estados = estDoc.data().estados || {};
+            comentarios = estDoc.data().comentarios || {};
+          }
+        } catch(e) {}
+
+        exportData.cursos[courseId] = { ambitos, estados, comentarios };
+      })();
+      batchPromises.push(p);
+    });
+    await Promise.all(batchPromises);
+
+    // Export global catalogs
+    try {
+      const catDoc = await db.collection('planes').doc('_config').collection('catalogos').doc('global').get();
+      if (catDoc.exists) exportData.catalogos = catDoc.data();
+    } catch(e) {}
+
+    // Download file
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'plan-digital-backup-' + new Date().toISOString().split('T')[0] + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Exportación completada', 'success');
+  } catch (err) {
+    console.error('Error exporting JSON:', err);
+    showToast('Error al exportar: ' + err.message, 'error');
+  }
+}
+
+function triggerImportJSON() {
+  document.getElementById('importJsonFile').click();
+}
+
+async function handleImportJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  // Reset input so same file can be re-selected
+  event.target.value = '';
+
+  // Confirm action
+  if (!confirm('¿Importar datos desde el archivo JSON?\n\nLos datos existentes de los cursos que aparezcan en el archivo serán sobrescritos. Los cursos que no aparezcan no se modificarán.')) return;
+
+  try {
+    showToast('Importando datos...', 'info');
+    const text = await file.text();
+    const data = JSON.parse(text);
+
+    if (!data.cursos || typeof data.cursos !== 'object') {
+      showToast('Archivo JSON no válido: falta la sección "cursos"', 'error');
+      return;
+    }
+
+    let coursesImported = 0;
+    const courseIds = Object.keys(data.cursos);
+
+    for (const courseId of courseIds) {
+      const courseData = data.cursos[courseId];
+      // Create course doc if not exists
+      await db.collection('planes').doc(courseId).set({ name: courseId }, { merge: true });
+
+      // Import ambitos
+      if (courseData.ambitos && typeof courseData.ambitos === 'object') {
+        for (const [ambitoId, ambitoData] of Object.entries(courseData.ambitos)) {
+          await db.collection('planes').doc(courseId).collection('ambitos').doc(ambitoId).set(ambitoData);
+        }
+      }
+
+      // Import estados
+      if (courseData.estados || courseData.comentarios) {
+        await db.collection('planes').doc(courseId).collection('estadosTareas').doc('global').set({
+          estados: courseData.estados || {},
+          comentarios: courseData.comentarios || {}
+        }, { merge: true });
+      }
+      coursesImported++;
+    }
+
+    // Import global catalogs
+    if (data.catalogos && typeof data.catalogos === 'object') {
+      await db.collection('planes').doc('_config').collection('catalogos').doc('global').set(data.catalogos, { merge: true });
+    }
+
+    showToast('Importación completada: ' + coursesImported + ' curso(s) importado(s)', 'success');
+
+    // Reload to pick up changes
+    state.currentCourse = '';
+    await loadCourses();
+  } catch (err) {
+    console.error('Error importing JSON:', err);
+    showToast('Error al importar: ' + err.message, 'error');
+  }
+}
+
 // ==================== INIT ====================
 (async function init() {
   document.getElementById('portalCurso').textContent = 'Cargando...';
@@ -3645,6 +3898,19 @@ function cancelUserAction() {
   // Auth state change listener will trigger loadCourses after successful login
   await checkConnection();
 })();
+
+// ==================== SERVICE WORKER REGISTRATION ====================
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/PlanActDigV2/sw.js')
+      .then((reg) => {
+        console.log('Service Worker registrado. Ámbito:', reg.scope);
+        // Check for updates periodically
+        setInterval(() => reg.update(), 60 * 60 * 1000); // cada hora
+      })
+      .catch((err) => console.warn('Service Worker no registrado:', err));
+  });
+}
 </script>
 </body>
 </html>
