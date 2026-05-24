@@ -1,0 +1,28 @@
+{
+  "name": "Plan de Actuación Digital",
+  "short_name": "Plan Digital",
+  "description": "Plan de Actuación Digital - IES Virgen de Villadiego. Gestión de planes STEAM 4.0.",
+  "start_url": "/PlanActDigV2/",
+  "scope": "/PlanActDigV2/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#3498db",
+  "theme_color": "#3498db",
+  "lang": "es",
+  "dir": "ltr",
+  "categories": ["education", "productivity"],
+  "icons": [
+    {
+      "src": "pwa/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "pwa/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
