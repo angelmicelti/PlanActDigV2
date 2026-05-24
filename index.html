@@ -5,27 +5,44 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#3498db">
 <meta name="description" content="Plan de Actuación Digital - IES Virgen de Villadiego">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Plan Digital">
 <title>Plan de Actuación Digital - IES Virgen de Villadiego</title>
-<link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiUGxhbiBkZSBBY3R1YWNpw7NuIERpZ2l0YWwiLCJzaG9ydF9uYW1lIjoiUGxhbiBEaWdpdGFsIiwic3RhcnRfdXJsIjoiLiIsImRpc3BsYXkiOiJzdGFuZGFsb25lIiwiYmFja2dyb3VuZF9jb2xvciI6IiMzNDk4ZGIiLCJ0aGVtZV9jb2xvciI6IiMzNDk4ZGIifQ==">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="pwa/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="pwa/icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="pwa/icons/favicon-16.png">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <style>
 :root{--primary-color:#3498db;--secondary-color:#2c3e50;--accent-color:#e74c3c;--light-color:#ecf0f1;--dark-color:#34495e;--success-color:#2ecc71;--warning-color:#f39c12;--steam-color:#9b59b6;--steam-light:#bb8fce;--gradient:linear-gradient(135deg,#3498db,#2c3e50);--steam-gradient:linear-gradient(135deg,#9b59b6,#8e44ad);--card-shadow:0 10px 20px rgba(0,0,0,.1);--hover-shadow:0 15px 30px rgba(0,0,0,.15);--theme-name:'Azul'}
 body,header,nav,.portal-inicio,.ambito-card,.detalle-linea,.linea-badge,.tarea-item,.btn-primary,.nav-btn,.section-title,.info-card,.filtro-btn.active,.gestion-btn.cursos,.gestion-btn.datos,.add-linea-btn,.resp-chip.selected,.course-select{transition:background-color .5s ease,border-color .5s ease,color .3s ease,box-shadow .5s ease}
 *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif}
 body{background:linear-gradient(135deg,#f5f7fa 0%,#e4e8ed 100%);color:#333;line-height:1.6;min-height:100vh}
-.portal-inicio{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--gradient);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;color:#fff;z-index:1000;cursor:pointer;padding:2rem;transition:opacity .5s ease}
+.portal-inicio{position:fixed;top:0;left:0;width:100%;height:100%;background:var(--gradient);display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;color:#fff;z-index:1000;cursor:pointer;padding:2rem;transition:opacity .5s ease;overflow:hidden}
 .portal-inicio.fade-out{opacity:0;pointer-events:none}
-.portal-titulo{font-size:4rem;font-weight:700;margin-bottom:1rem;text-shadow:0 4px 8px rgba(0,0,0,.3);line-height:1.2}
-.portal-subtitulo{font-size:2.5rem;font-weight:500;margin-bottom:2rem;text-shadow:0 2px 4px rgba(0,0,0,.3)}
-.portal-curso{font-size:2rem;font-weight:400;margin-bottom:3rem;text-shadow:0 2px 4px rgba(0,0,0,.3)}
-.portal-instruccion{position:absolute;bottom:2rem;font-size:1.2rem;opacity:.8;animation:pulse 2s infinite}
+.portal-inicio .portal-bg-shape{position:absolute;border-radius:50%;background:rgba(255,255,255,.04);pointer-events:none}
+.portal-inicio .portal-bg-shape:nth-child(1){width:300px;height:300px;top:-80px;right:-80px;animation:portalFloat 8s ease-in-out infinite}
+.portal-inicio .portal-bg-shape:nth-child(2){width:200px;height:200px;bottom:-60px;left:-60px;animation:portalFloat 6s ease-in-out infinite 1s}
+.portal-inicio .portal-bg-shape:nth-child(3){width:150px;height:150px;top:40%;left:10%;animation:portalFloat 10s ease-in-out infinite 2s}
+@keyframes portalFloat{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-30px) scale(1.05)}}
+.portal-titulo{font-size:3.6rem;font-weight:700;margin-bottom:.8rem;text-shadow:0 4px 8px rgba(0,0,0,.3);line-height:1.2;opacity:0;animation:portalSlideUp .8s ease forwards .2s}
+.portal-subtitulo{font-size:2.2rem;font-weight:500;margin-bottom:1.5rem;text-shadow:0 2px 4px rgba(0,0,0,.3);opacity:0;animation:portalSlideUp .8s ease forwards .5s}
+.portal-curso{font-size:2.8rem;font-weight:600;margin-bottom:1.5rem;text-shadow:0 2px 4px rgba(0,0,0,.3);opacity:0;animation:portalSlideUp .8s ease forwards .8s;letter-spacing:.05em}
+.portal-instruccion{opacity:0;animation:portalFadeIn .6s ease forwards 1.2s;font-size:.95rem;color:rgba(255,255,255,.7);position:absolute;bottom:1.5rem}
+.portal-instruccion .portal-tap-hint{animation:pulse 2s infinite}
+@keyframes portalSlideUp{0%{opacity:0;transform:translateY(25px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes portalFadeIn{0%{opacity:0}100%{opacity:1}}
+.portal-progress{position:absolute;bottom:0;left:0;height:4px;background:rgba(255,255,255,.5);border-radius:0 2px 2px 0;width:0;transition:none}
+.portal-progress.active{animation:portalProgress 5s linear forwards}
+@keyframes portalProgress{0%{width:0}100%{width:100%}}
 @keyframes pulse{0%{opacity:.6}50%{opacity:1}100%{opacity:.6}}
 .theme-indicator{position:fixed;bottom:1rem;left:1rem;z-index:5000;display:flex;align-items:center;gap:.4rem;padding:.3rem .7rem;border-radius:16px;background:var(--primary-color);box-shadow:0 2px 10px rgba(0,0,0,.2);font-size:.7rem;font-weight:600;color:#fff;opacity:.85;transition:all .5s ease;pointer-events:none}
 .theme-indicator i{font-size:.65rem}
-.firebase-status{position:fixed;top:1rem;right:1rem;z-index:5000;display:flex;align-items:center;gap:.5rem;padding:.4rem .8rem;border-radius:20px;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.15);font-size:.8rem;font-weight:600;color:#333}
-.firebase-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
-.firebase-dot.connected{background:#2ecc71;box-shadow:0 0 6px #2ecc71}
-.firebase-dot.disconnected{background:#e74c3c;box-shadow:0 0 6px #e74c3c}
+.firebase-status-integrated{display:flex;align-items:center;gap:.35rem;font-size:.7rem;color:#888}
+.firebase-dot{width:7px;height:7px;border-radius:50%;display:inline-block;flex-shrink:0}
+.firebase-dot.connected{background:#2ecc71;box-shadow:0 0 4px #2ecc71}
+.firebase-dot.disconnected{background:#e74c3c;box-shadow:0 0 4px #e74c3c}
 header{background:var(--gradient);color:#fff;padding:2rem 1.5rem;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.1);position:relative;overflow:hidden}
 header::before{content:"";position:absolute;top:0;left:0;right:0;bottom:0;background:url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" preserveAspectRatio="none"><path d="M0,0 L100,0 L100,100 Z" fill="rgba(255,255,255,0.1)"/></svg>');background-size:cover}
 h1{font-size:2.2rem;margin-bottom:.5rem;position:relative;text-shadow:0 2px 4px rgba(0,0,0,.2)}
@@ -51,7 +68,7 @@ nav{background-color:#fff;padding:1rem;display:flex;justify-content:center;flex-
 .gestion-toggle i{transition:transform .3s}
 .gestion-toggle.open i{transform:rotate(90deg)}
 .gestion-buttons{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:.5rem;margin-top:.5rem;max-height:0;overflow:hidden;transition:max-height .3s ease}
-.gestion-buttons.open{max-height:200px}
+.gestion-buttons.open{max-height:600px}
 .gestion-btn{background:#fff;border:none;padding:.7rem 1rem;border-radius:8px;cursor:pointer;font-weight:600;transition:all .3s;display:flex;align-items:center;justify-content:center;gap:.5rem;box-shadow:0 2px 4px rgba(0,0,0,.1)}
 .gestion-btn:hover{transform:translateY(-2px);box-shadow:0 4px 8px rgba(0,0,0,.15)}
 .gestion-btn.consultas{background:var(--success-color);color:#fff}
@@ -95,7 +112,18 @@ nav{background-color:#fff;padding:1rem;display:flex;justify-content:center;flex-
 .tarea-item{background:#f8f9fa;border-left:4px solid var(--primary-color);padding:1.5rem;margin-bottom:1.5rem;border-radius:0 8px 8px 0;transition:all .3s ease;position:relative}
 .tarea-item:hover{transform:translateX(5px);box-shadow:0 5px 15px rgba(0,0,0,.08)}
 .tarea-item h4{color:var(--dark-color);margin-bottom:.5rem;display:flex;align-items:center;gap:.5rem}
+.tarea-delete-btn{background:none;border:none;cursor:pointer;padding:.3rem .5rem;border-radius:4px;color:#bbb;font-size:.85rem;margin-left:auto;transition:all .2s;flex-shrink:0;line-height:1}
+.tarea-delete-btn:hover{color:var(--accent-color);background:rgba(231,76,60,.08)}
+.tarea-deleting{border-left-color:var(--accent-color);background:#fff5f5}
+.tarea-delete-confirm{display:flex;align-items:center;justify-content:space-between;gap:.8rem;padding:.6rem .8rem;border-radius:6px;background:#fff3cd;color:#856404;font-size:.85rem;font-weight:500;margin-bottom:.8rem;flex-wrap:wrap;animation:feedbackFade .2s ease forwards;border:1px solid #ffc107}
 .estado-tarea{display:flex;gap:.5rem;margin-top:1rem;flex-wrap:wrap}
+.tarea-comentario{margin-top:.7rem}
+.tarea-comentario-label{display:block;font-size:.78rem;font-weight:600;color:var(--secondary-color);margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.3px}
+.tarea-comentario-textarea{width:100%;min-height:52px;max-height:120px;padding:.45rem .6rem;border:1px solid #ddd;border-radius:6px;font-size:.82rem;font-family:inherit;line-height:1.5;resize:vertical;transition:all .3s;background:#f8f9fa;color:#555}
+.tarea-comentario-textarea:focus{border-color:var(--primary-color);box-shadow:0 0 0 2px rgba(52,152,219,.15);outline:none;background:#fff}
+.tarea-comentario-textarea::placeholder{color:#aaa;font-style:italic}
+.tarea-comentario-readonly{background:#f0f7ff;border:1px solid #d0e3f7;border-radius:6px;padding:.5rem .7rem}
+.tarea-comentario-texto{font-size:.82rem;color:#555;line-height:1.5;white-space:pre-wrap;word-break:break-word}
 .estado-btn{padding:.5rem 1rem;border:none;border-radius:4px;cursor:pointer;font-weight:500;transition:all .2s}
 .estado-btn.no-iniciado{background:#e0e0e0;color:#666}
 .estado-btn.en-proceso{background:#fff3cd;color:#856404}
@@ -158,11 +186,32 @@ nav{background-color:#fff;padding:1rem;display:flex;justify-content:center;flex-
 .tarea-eval-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem;padding-bottom:.4rem;border-bottom:1px solid #d0e3f7}
 .tarea-eval-header h5{color:var(--primary-color);font-size:.85rem;display:flex;align-items:center;gap:.35rem;margin:0}
 .tarea-eval-header h5 i{font-size:.8rem}
-.tarea-eval-view{display:flex;flex-wrap:wrap;gap:.5rem;font-size:.82rem;color:#555}
-.tarea-eval-view .ev-tag{display:inline-flex;align-items:center;gap:.25rem;background:#e8f0fe;padding:.2rem .55rem;border-radius:10px;font-size:.78rem;font-weight:500;color:var(--secondary-color)}
-.tarea-eval-view .ev-tag i{font-size:.7rem;color:var(--primary-color)}
-.tarea-eval-view .ev-tag.temp{background:#fef5e7;color:#856404}
-.tarea-eval-view .ev-tag.temp i{color:var(--warning-color)}
+.eval-table{width:100%;border-collapse:separate;border-spacing:0;margin-top:.4rem;font-size:.82rem}
+.eval-table thead th{background:#e8f0fe;color:var(--secondary-color);font-weight:600;padding:.5rem .6rem;text-align:left;border-bottom:2px solid #d0e3f7;font-size:.75rem;text-transform:uppercase;letter-spacing:.3px}
+.eval-table thead th:first-child{border-radius:6px 0 0 0}
+.eval-table thead th:last-child{border-radius:0 6px 0 0}
+.eval-table tbody td{padding:.5rem .6rem;vertical-align:top;border-bottom:1px solid #e8f0fe;color:#555}
+.eval-table tbody td .eval-cell-chips{display:flex;flex-wrap:wrap;gap:.3rem}
+.eval-table tbody td .eval-chip{display:inline-flex;align-items:center;gap:.2rem;padding:.2rem .5rem;border-radius:12px;font-size:.75rem;font-weight:600;background:#e8f0fe;color:var(--secondary-color)}
+.eval-table tbody td .eval-chip.resp{background:rgba(52,152,219,.12);color:#2980b9}
+.eval-table tbody td .eval-chip.herr{background:rgba(243,156,18,.12);color:#e67e22}
+.eval-table tbody td .eval-chip.temp{background:rgba(46,204,113,.12);color:#27ae60}
+.eval-chip-edit,.eval-chip-del{font-size:.6rem;opacity:0;cursor:pointer;margin-left:2px;padding:1px 2px;border-radius:50%;transition:all .2s}
+.eval-chip:hover .eval-chip-edit,.eval-chip:hover .eval-chip-del{opacity:.7}
+.eval-chip-edit:hover{opacity:1!important;color:var(--primary-color);background:rgba(52,152,219,.15)}
+.eval-chip-del:hover{opacity:1!important;color:var(--accent-color);background:rgba(231,76,60,.15)}
+.eval-chip-input{width:70px;padding:1px 4px;border:1px solid var(--primary-color);border-radius:8px;font-size:.75rem;font-weight:600;background:#fff;outline:none;box-shadow:0 0 0 2px rgba(52,152,219,.2);font-family:inherit}
+.eval-chip-input.herr-input{border-color:#e67e22;box-shadow:0 0 0 2px rgba(243,156,18,.2)}
+.eval-chip-input.temp-input{border-color:#27ae60;box-shadow:0 0 0 2px rgba(46,204,113,.2)}
+.eval-chip-edit-actions{display:inline-flex;gap:2px;margin-left:2px}
+.eval-chip-save-btn,.eval-chip-cancel-btn{font-size:.55rem;padding:1px 4px;border-radius:50%;border:none;cursor:pointer;transition:all .2s;line-height:1.2}
+.eval-chip-save-btn{background:var(--primary-color);color:#fff}
+.eval-chip-save-btn:hover{background:#2980b9}
+.eval-chip-cancel-btn{background:#ccc;color:#666}
+.eval-chip-cancel-btn:hover{background:#bbb}
+.eval-table-edit-row{display:flex;flex-direction:column;gap:.8rem;margin-top:.6rem}
+.eval-table-edit-field label{display:block;font-weight:600;font-size:.78rem;color:var(--secondary-color);margin-bottom:.3rem;text-transform:uppercase;letter-spacing:.3px}
+.eval-empty-row td{color:#aaa;font-style:italic;font-size:.8rem;text-align:center;padding:.8rem}
 .consultas-section{background:#fff;border-radius:12px;box-shadow:var(--card-shadow);padding:2rem;margin-top:2rem}
 .filtros-avanzados{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.5rem;margin:1.5rem 0}
 .filtro-group{display:flex;flex-direction:column;gap:.5rem}
@@ -250,6 +299,26 @@ nav{background-color:#fff;padding:1rem;display:flex;justify-content:center;flex-
 .course-action-btn.delete{background:#e74c3c;color:#fff}
 .course-action-btn.delete:hover{background:#c0392b}
 .course-action-btn:disabled{opacity:.4;cursor:not-allowed}
+.user-mgmt-list{list-style:none;padding:0;margin:0}
+.user-mgmt-item{display:flex;align-items:center;gap:.8rem;padding:.8rem 1rem;border:1px solid #eee;border-radius:8px;margin-bottom:.5rem;background:#fff;transition:all .2s}
+.user-mgmt-item:hover{box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.user-mgmt-item.current-user{background:#f0f7ff;border-color:#b3d7ff}
+.user-mgmt-info{flex:1;min-width:0}
+.user-mgmt-name{font-weight:600;color:var(--secondary-color);display:flex;align-items:center;gap:.5rem}
+.user-mgmt-name .you-tag{font-size:.65rem;background:var(--primary-color);color:#fff;padding:.1rem .4rem;border-radius:8px;font-weight:600}
+.user-mgmt-username{font-size:.8rem;color:#888;margin-top:.15rem}
+.user-mgmt-actions{display:flex;gap:.4rem;align-items:center;flex-shrink:0}
+.user-mgmt-btn{border:none;padding:.35rem .7rem;border-radius:6px;cursor:pointer;font-size:.75rem;font-weight:600;transition:all .2s;display:flex;align-items:center;gap:.3rem}
+.user-mgmt-btn.promote{background:#f39c12;color:#fff}
+.user-mgmt-btn.promote:hover{background:#e67e22}
+.user-mgmt-btn.demote{background:#95a5a6;color:#fff}
+.user-mgmt-btn.demote:hover{background:#7f8c8d}
+.user-mgmt-btn.delete{background:#e74c3c;color:#fff}
+.user-mgmt-btn.delete:hover{background:#c0392b}
+.user-mgmt-btn:disabled{opacity:.4;cursor:not-allowed}
+.user-mgmt-count{font-size:.85rem;color:#888;margin-bottom:.8rem;padding:.5rem 0}
+.user-mgmt-confirm{margin-top:.5rem;padding:.6rem;border-radius:8px;background:#fff3cd;color:#856404;font-size:.85rem;display:flex;align-items:center;justify-content:space-between;gap:.5rem;flex-wrap:wrap}
+.user-mgmt-confirm button{border:none;padding:.3rem .6rem;border-radius:6px;cursor:pointer;font-size:.75rem;font-weight:600;transition:all .2s}
 .resp-chip{display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .6rem;border-radius:16px;font-size:.82rem;font-weight:600;cursor:pointer;transition:all .2s;user-select:none;border:none;line-height:1.4}
 .resp-chip.selected{background:var(--primary-color);color:#fff}
 .resp-chip.selected:hover{background:#2980b9}
@@ -261,29 +330,113 @@ nav{background-color:#fff;padding:1rem;display:flex;justify-content:center;flex-
 .resp-list-label{width:100%;font-size:.75rem;font-weight:600;color:#999;padding:.2rem 0;margin-top:.2rem;cursor:default}
 .resp-list-label:first-child{margin-top:0}
 .hidden{display:none}
-@media(max-width:480px){.portal-titulo{font-size:2rem}.portal-subtitulo{font-size:1.4rem}.portal-curso{font-size:1.2rem}header{padding:1.5rem 1rem}h1{font-size:1.8rem}h2{font-size:1.1rem}.container{padding:0 1rem;margin:1rem auto}.ambito-card{padding:1.5rem}.ambito-card h3{font-size:1.3rem}.linea-item{padding:1rem;flex-direction:column;align-items:flex-start;gap:.7rem}.linea-badge{width:25px;height:25px;font-size:.8rem}.linea-actions{opacity:1}.detalle-linea{padding:1.5rem}.tarea-item{padding:1rem}.estado-tarea{flex-direction:column;align-items:stretch}.estado-btn{width:100%;margin-bottom:.5rem}.info-grid{grid-template-columns:1fr}.info-card{padding:1rem}.info-edit-btn{font-size:.7rem;padding:.2rem .35rem}.info-edit-row .btn-primary,.info-edit-row .btn-secondary{padding:.35rem .6rem;font-size:.75rem}.eval-block{padding:.8rem}.eval-block-header h5{font-size:.85rem}.consultas-section,.pdf-section{padding:1.5rem}.filtros-avanzados,.filtros-pdf{grid-template-columns:1fr}.steam-hero{padding:2rem 1rem}.steam-hero h2{font-size:1.8rem}.steam-card{padding:1.5rem}.steam-integration{padding:1.5rem}.steam-integration ul{grid-template-columns:1fr}.modal-content{width:95%;padding:1.5rem}.nav-btn{padding:.7rem 1.2rem;font-size:.9rem}.gestion-btn{padding:.6rem .8rem;font-size:.9rem}.volver-btn{padding:.6rem 1.2rem;font-size:.9rem}.firebase-status{top:.5rem;right:.5rem;font-size:.7rem}}
+.auth-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:linear-gradient(135deg,#1e3a8a 0%,#3498db 50%,#3b82f6 100%);display:flex;justify-content:center;align-items:center;z-index:9000;min-height:100vh;padding:1rem}
+.auth-card{background:#fff;border-radius:1rem;box-shadow:0 25px 50px rgba(0,0,0,.25);width:90%;max-width:420px;padding:2.5rem;color:#333;animation:authSlideIn .4s ease}
+@keyframes authSlideIn{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+.auth-icon{width:56px;height:56px;margin:0 auto 1rem;background:#eff6ff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;color:var(--primary-color)}
+.auth-alert{padding:.6rem .8rem;border-radius:8px;font-size:.85rem;margin-bottom:.8rem;font-weight:500;display:flex;align-items:center;gap:.4rem}
+.auth-alert-error{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
+.auth-alert-success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
+.auth-alert-info{background:#cce7ff;color:#004085;border:1px solid #b3d7ff}
+.auth-form-group{margin-bottom:1rem}
+.auth-form-group label{display:block;font-weight:600;color:var(--secondary-color);margin-bottom:.3rem;font-size:.85rem}
+.auth-input{width:100%;padding:.65rem .85rem;border:1.5px solid #ddd;border-radius:8px;font-size:1rem;transition:all .3s;font-family:inherit}
+.auth-input:focus{border-color:var(--primary-color);box-shadow:0 0 0 3px rgba(52,152,219,.15);outline:none}
+.auth-btn{width:100%;padding:.7rem;border:none;border-radius:8px;cursor:pointer;font-weight:600;font-size:1rem;transition:all .3s;display:flex;align-items:center;justify-content:center;gap:.5rem;margin-top:.5rem}
+.auth-btn.primary{background:var(--primary-color);color:#fff}
+.auth-btn.primary:hover{background:#2980b9;transform:translateY(-1px)}
+.auth-btn.primary:disabled{opacity:.6;cursor:not-allowed;transform:none}
+.auth-role-badge{display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .7rem;border-radius:20px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+.auth-role-badge.admin{background:#e74c3c;color:#fff}
+.auth-role-badge.viewer{background:#3498db;color:#fff}
+.user-bar{display:flex;align-items:center;justify-content:space-between;padding:.4rem 1.5rem;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.05);font-size:.85rem;gap:.5rem;flex-wrap:wrap}
+.user-bar-left{display:flex;align-items:center;gap:.6rem}
+.user-bar-right{display:flex;align-items:center;gap:.8rem}
+.user-bar .user-name{font-weight:600;color:var(--secondary-color)}
+.user-bar .logout-btn{background:none;border:1.5px solid #e74c3c;color:#e74c3c;padding:.3rem .7rem;border-radius:20px;cursor:pointer;font-size:.75rem;font-weight:600;transition:all .2s;display:flex;align-items:center;gap:.3rem}
+.user-bar .logout-btn:hover{background:#e74c3c;color:#fff}
+@media(max-width:480px){.auth-card{padding:1.8rem;width:95%}.auth-card h2{font-size:1.3rem}.user-bar{padding:.4rem 1rem;font-size:.78rem;flex-direction:column;align-items:flex-start;gap:.3rem}}
+@media(max-width:480px){.portal-titulo{font-size:2rem}.portal-subtitulo{font-size:1.4rem}.portal-curso{font-size:1.2rem}header{padding:1.5rem 1rem}h1{font-size:1.8rem}h2{font-size:1.1rem}.container{padding:0 1rem;margin:1rem auto}.ambito-card{padding:1.5rem}.ambito-card h3{font-size:1.3rem}.linea-item{padding:1rem;flex-direction:column;align-items:flex-start;gap:.7rem}.linea-badge{width:25px;height:25px;font-size:.8rem}.linea-actions{opacity:1}.detalle-linea{padding:1.5rem}.tarea-item{padding:1rem}.estado-tarea{flex-direction:column;align-items:stretch}.estado-btn{width:100%;margin-bottom:.5rem}.info-grid{grid-template-columns:1fr}.info-card{padding:1rem}.info-edit-btn{font-size:.7rem;padding:.2rem .35rem}.info-edit-row .btn-primary,.info-edit-row .btn-secondary{padding:.35rem .6rem;font-size:.75rem}.eval-block{padding:.8rem}.eval-block-header h5{font-size:.85rem}.consultas-section,.pdf-section{padding:1.5rem}.filtros-avanzados,.filtros-pdf{grid-template-columns:1fr}.steam-hero{padding:2rem 1rem}.steam-hero h2{font-size:1.8rem}.steam-card{padding:1.5rem}.steam-integration{padding:1.5rem}.steam-integration ul{grid-template-columns:1fr}.modal-content{width:95%;padding:1.5rem}.nav-btn{padding:.7rem 1.2rem;font-size:.9rem}.gestion-btn{padding:.6rem .8rem;font-size:.9rem}.volver-btn{padding:.6rem 1.2rem;font-size:.9rem}}
 @media(max-width:768px){.portal-titulo{font-size:2.5rem}.portal-subtitulo{font-size:1.8rem}.portal-curso{font-size:1.5rem}.ambitos-grid{grid-template-columns:1fr}nav{flex-direction:column;align-items:center}.nav-btn{width:100%;max-width:300px;justify-content:center}.gestion-buttons{grid-template-columns:1fr}.filtros-avanzados{grid-template-columns:1fr}.seccion-cabecera{flex-direction:column;align-items:flex-start}.volver-btn{align-self:flex-end}.filtros-pdf{grid-template-columns:1fr}.steam-grid{grid-template-columns:1fr}.steam-hero{padding:2rem 1.5rem}.steam-hero h2{font-size:2rem}.steam-integration ul{grid-template-columns:1fr}.modal-content{width:95%;padding:1.5rem}}
-@media(max-width:360px){.portal-titulo{font-size:1.8rem}.portal-subtitulo{font-size:1.2rem}.portal-curso{font-size:1rem}.portal-instruccion{font-size:.9rem}.ambito-card{padding:1rem}.ambito-card h3{font-size:1.2rem}.detalle-linea{padding:1rem}.tarea-item{padding:.8rem}.consultas-section,.pdf-section{padding:1rem}.steam-hero{padding:1.5rem 1rem}.steam-hero h2{font-size:1.5rem}.steam-card{padding:1rem}.steam-integration{padding:1rem}}
+@media(max-width:360px){.portal-titulo{font-size:1.8rem}.portal-subtitulo{font-size:1.2rem}.portal-curso{font-size:1rem}.portal-instruccion{font-size:.9rem}.ambito-card{padding:1rem}.ambito-card h3{font-size:1.2rem}.detalle-linea{padding:1rem}.tarea-item{padding:.8rem}.eval-table thead th,.eval-table tbody td{padding:.35rem .3rem;font-size:.7rem}.eval-chip{font-size:.68rem;padding:.15rem .35rem}.consultas-section,.pdf-section{padding:1rem}.steam-hero{padding:1.5rem 1rem}.steam-hero h2{font-size:1.5rem}.steam-card{padding:1rem}.steam-integration{padding:1rem}}
+@media(max-width:480px){.eval-table{font-size:.75rem}.eval-table thead th,.eval-table tbody td{padding:.4rem .35rem}.eval-chip{font-size:.7rem;padding:.15rem .4rem}}
 </style>
 </head>
 <body>
 
-<!-- Firebase Status -->
-<div class="firebase-status" id="firebaseStatus">
-  <span class="firebase-dot disconnected" id="firebaseDot"></span>
-  <span id="firebaseText">Conectando...</span>
+<!-- Auth Overlay -->
+<div class="auth-overlay" id="authOverlay" style="display:none">
+  <div class="auth-card">
+    <div class="text-center" style="margin-bottom:1.5rem">
+      <div class="auth-icon">
+        <i class="fas fa-laptop-code"></i>
+      </div>
+      <h2 style="color:var(--secondary-color);font-size:1.4rem;margin-bottom:.3rem;text-align:center;text-transform:uppercase">Plan de Actuación Digital</h2>
+      <p style="color:#888;font-size:.85rem;text-align:center">IES Virgen de Villadiego</p>
+      <p id="authLastCourse" style="color:#555;font-size:.8rem;text-align:center;margin-top:.3rem;display:none"></p>
+    </div>
+    <div id="authError" class="auth-alert auth-alert-error" style="display:none"></div>
+    <div id="authSuccess" class="auth-alert auth-alert-success" style="display:none"></div>
+    <div id="authSetupSection" style="display:none">
+      <div class="auth-alert auth-alert-info" style="margin-bottom:1rem">
+        <strong>Primera vez:</strong> No hay usuarios registrados. Crea la cuenta de administrador para comenzar.
+      </div>
+      <div class="auth-form-group">
+        <label>Nombre completo</label>
+        <input type="text" id="authName" class="auth-input" placeholder="Ej: Juan García">
+      </div>
+    </div>
+    <div class="auth-form-group">
+      <label>Usuario</label>
+      <input type="text" id="authUsername" class="auth-input" placeholder="Tu nombre de usuario" autocomplete="username">
+    </div>
+    <div class="auth-form-group">
+      <label>Contraseña</label>
+      <input type="password" id="authPass" class="auth-input" placeholder="Tu contraseña" autocomplete="current-password">
+    </div>
+    <button id="authBtn" onclick="handleAuth()" class="auth-btn primary">
+      <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
+    </button>
+    <p style="text-align:center;color:#aaa;font-size:.75rem;margin-top:1rem">
+      <i class="fas fa-shield-alt"></i> Datos almacenados localmente en el navegador
+    </p>
+  </div>
+</div>
+
+<!-- Theme Indicator -->
+<div class="theme-indicator" id="themeIndicator">
+  <i class="fas fa-palette"></i>
+  <span id="themeIndicatorText">Azul</span>
 </div>
 
 <!-- Portal de inicio -->
 <div class="portal-inicio" id="portalInicio" style="display:flex">
+  <div class="portal-bg-shape"></div>
+  <div class="portal-bg-shape"></div>
+  <div class="portal-bg-shape"></div>
   <div class="portal-titulo">PLAN DE ACTUACIÓN DIGITAL</div>
   <div class="portal-subtitulo">IES Virgen de Villadiego</div>
   <div class="portal-curso" id="portalCurso">Cargando...</div>
-  <div class="portal-instruccion">Haz clic en cualquier parte para continuar</div>
+  <div class="portal-instruccion"><span class="portal-tap-hint">Haz clic en cualquier parte para continuar</span></div>
+  <div class="portal-progress" id="portalProgress"></div>
 </div>
 
 <!-- Main App -->
 <div id="mainApp" style="display:none">
+  <div class="user-bar" id="userBar">
+    <div class="user-bar-left">
+      <span class="auth-role-badge" id="userRoleBadge"></span>
+      <span class="user-name" id="userDisplayName"></span>
+    </div>
+    <div class="user-bar-right">
+      <div class="firebase-status-integrated" id="firebaseStatus">
+        <span class="firebase-dot disconnected" id="firebaseDot"></span>
+        <span id="firebaseText">Conectando...</span>
+      </div>
+      <span id="userBarCourse" style="color:#888;font-size:.8rem"></span>
+      <button class="logout-btn" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</button>
+    </div>
+  </div>
   <header>
     <h1>PLAN DE ACTUACIÓN DIGITAL</h1>
     <h2>IES Virgen de Villadiego</h2>
@@ -314,6 +467,10 @@ nav{background-color:#fff;padding:1rem;display:flex;justify-content:center;flex-
       <button class="gestion-btn transferir" onclick="openTransferModal()"><i class="fas fa-exchange-alt"></i> Transferir líneas</button>
       <button class="gestion-btn consultas" onclick="goConsultas()"><i class="fas fa-search"></i> Consultas</button>
       <button class="gestion-btn pdf" onclick="goPdf()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
+      <button class="gestion-btn" style="background:#2c3e50;color:#fff" onclick="openUsersModal()"><i class="fas fa-users-cog"></i> Gestión de Usuarios</button>
+      <button class="gestion-btn" style="background:#16a085;color:#fff" onclick="exportJSON()"><i class="fas fa-download"></i> Exportar JSON</button>
+      <button class="gestion-btn" style="background:#8e44ad;color:#fff" onclick="triggerImportJSON()"><i class="fas fa-upload"></i> Importar JSON</button>
+      <input type="file" id="importJsonFile" accept=".json" style="display:none" onchange="handleImportJSON(event)">
     </div>
   </div>
 
@@ -375,37 +532,8 @@ nav{background-color:#fff;padding:1rem;display:flex;justify-content:center;flex-
       <input class="form-input" type="text" id="formTitulo" placeholder="Título de la línea">
     </div>
     <div class="form-group">
-      <label>Descripción</label>
+      <label>Descripción *</label>
       <textarea class="form-textarea" id="formDescripcion" placeholder="Descripción de la línea"></textarea>
-    </div>
-    <div class="form-group">
-      <label>Tareas de Formación (una por línea)</label>
-      <textarea class="form-textarea" id="formTareasFormacion" placeholder="Tarea 1&#10;Tarea 2"></textarea>
-    </div>
-    <div class="form-group">
-      <label>Tareas de Intervención (una por línea)</label>
-      <textarea class="form-textarea" id="formTareasIntervencion" placeholder="Tarea 1&#10;Tarea 2"></textarea>
-    </div>
-    <div class="form-group">
-      <label>Objeto de Evaluación</label>
-      <input class="form-input" type="text" id="formEvalObjeto" placeholder="Objeto de evaluación">
-    </div>
-    <div class="form-group">
-      <label>Herramientas de Evaluación</label>
-      <input class="form-input" type="text" id="formEvalHerr" placeholder="Herramientas">
-    </div>
-    <div class="form-group">
-      <label>Responsables <span style="font-weight:400;font-size:.8rem;color:#999">(haz clic para añadir/eliminar)</span></label>
-      <div id="responsablesChipsContainer" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.6rem;min-height:32px"></div>
-      <div id="responsablesListContainer" style="display:flex;flex-wrap:wrap;gap:.3rem;max-height:120px;overflow-y:auto;padding:.5rem;background:#f8f9fa;border-radius:8px;border:1px solid #eee"></div>
-      <div style="display:flex;gap:.4rem;margin-top:.5rem">
-        <input class="form-input" type="text" id="newResponsableInput" placeholder="Nuevo responsable..." style="flex:1;padding:.5rem .7rem;font-size:.9rem" onkeydown="if(event.key==='Enter'){event.preventDefault();addNewResponsable()}">
-        <button type="button" class="btn-primary" onclick="addNewResponsable()" style="padding:.5rem .8rem;font-size:.85rem;white-space:nowrap"><i class="fas fa-plus"></i> Añadir</button>
-      </div>
-    </div>
-    <div class="form-group">
-      <label>Temporalización (separados por coma)</label>
-      <input class="form-input" type="text" id="formTemporalizacion" placeholder="Primer trimestre, Segundo trimestre">
     </div>
     <div class="form-group">
       <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer">
@@ -413,10 +541,75 @@ nav{background-color:#fff;padding:1rem;display:flex;justify-content:center;flex-
         Vinculada al Proyecto STEAM 4.0
       </label>
     </div>
+    <div id="editModalExtraFields" style="display:none">
+      <div class="form-group">
+        <label>Tareas de Formación (una por línea)</label>
+        <textarea class="form-textarea" id="formTareasFormacion" placeholder="Tarea 1&#10;Tarea 2"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Tareas de Intervención (una por línea)</label>
+        <textarea class="form-textarea" id="formTareasIntervencion" placeholder="Tarea 1&#10;Tarea 2"></textarea>
+      </div>
+      <div class="form-group">
+        <label>Objeto de Evaluación</label>
+        <input class="form-input" type="text" id="formEvalObjeto" placeholder="Objeto de evaluación">
+      </div>
+      <div class="form-group">
+        <label>Herramientas de Evaluación</label>
+        <input class="form-input" type="text" id="formEvalHerr" placeholder="Herramientas">
+      </div>
+      <div class="form-group">
+        <label>Responsables <span style="font-weight:400;font-size:.8rem;color:#999">(haz clic para añadir/eliminar)</span></label>
+        <div id="responsablesChipsContainer" style="display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:.6rem;min-height:32px"></div>
+        <div id="responsablesListContainer" style="display:flex;flex-wrap:wrap;gap:.3rem;max-height:120px;overflow-y:auto;padding:.5rem;background:#f8f9fa;border-radius:8px;border:1px solid #eee"></div>
+        <div style="display:flex;gap:.4rem;margin-top:.5rem">
+          <input class="form-input" type="text" id="newResponsableInput" placeholder="Nuevo responsable..." style="flex:1;padding:.5rem .7rem;font-size:.9rem" onkeydown="if(event.key==='Enter'){event.preventDefault();addNewResponsable()}">
+          <button type="button" class="btn-primary" onclick="addNewResponsable()" style="padding:.5rem .8rem;font-size:.85rem;white-space:nowrap"><i class="fas fa-plus"></i> Añadir</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Temporalización (separados por coma)</label>
+        <input class="form-input" type="text" id="formTemporalizacion" placeholder="Primer trimestre, Segundo trimestre">
+      </div>
+    </div>
     <div id="editModalMessage"></div>
     <div class="btn-row">
       <button class="btn-secondary" onclick="closeEditModal()">Cancelar</button>
       <button class="btn-primary" onclick="saveLinea()"><i class="fas fa-save"></i> Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- New Actuación Modal -->
+<div class="modal-overlay" id="actuacionModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title"><i class="fas fa-plus-circle" style="color:var(--primary-color)"></i> Introducir nueva actuación</h3>
+      <button class="modal-close" onclick="closeNewActuacionModal()">&times;</button>
+    </div>
+    <div class="form-group">
+      <label>Tipo de actuación *</label>
+      <div style="display:flex;gap:1rem;margin-top:.5rem">
+        <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;padding:.8rem 1.2rem;border:2px solid #ddd;border-radius:8px;flex:1;transition:all .2s" id="actTipoFormLabel">
+          <input type="radio" name="actTipo" value="formacion" id="actTipoFormacion" checked onchange="updateTipoStyle()" style="accent-color:var(--primary-color)">
+          <i class="fas fa-chalkboard-teacher" style="color:var(--primary-color);font-size:1.1rem"></i>
+          <span style="font-weight:600;color:#333">Formación</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;padding:.8rem 1.2rem;border:2px solid #ddd;border-radius:8px;flex:1;transition:all .2s" id="actTipoIntervLabel">
+          <input type="radio" name="actTipo" value="intervencion" id="actTipoIntervencion" onchange="updateTipoStyle()" style="accent-color:var(--primary-color)">
+          <i class="fas fa-tasks" style="color:var(--success-color);font-size:1.1rem"></i>
+          <span style="font-weight:600;color:#333">Actuaciones en el centro</span>
+        </label>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Enunciado de la actuación *</label>
+      <textarea class="form-textarea" id="actEnunciado" placeholder="Describe la actuación..." style="min-height:100px"></textarea>
+    </div>
+    <div id="actuacionModalMessage"></div>
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="closeNewActuacionModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveNewActuacion()"><i class="fas fa-save"></i> Añadir actuación</button>
     </div>
   </div>
 </div>
@@ -464,6 +657,53 @@ nav{background-color:#fff;padding:1rem;display:flex;justify-content:center;flex-
       <button class="btn-secondary" onclick="closeTransferModal()">Cancelar</button>
       <button class="btn-primary" onclick="handleTransfer()"><i class="fas fa-exchange-alt"></i> Transferir</button>
     </div>
+  </div>
+</div>
+
+<!-- Users Management Modal -->
+<div class="modal-overlay" id="usersModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3 class="modal-title"><i class="fas fa-users-cog"></i> Gestión de Usuarios</h3>
+      <button class="modal-close" onclick="closeUsersModal()">&times;</button>
+    </div>
+    <div id="usersModalMsg"></div>
+    <!-- Create user form -->
+    <div id="createUserSection" style="background:#f0f7ff;border:1px solid #b3d7ff;border-radius:8px;padding:1rem;margin-bottom:.8rem">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.7rem">
+        <span style="font-weight:700;color:var(--secondary-color);font-size:.95rem"><i class="fas fa-user-plus" style="color:var(--primary-color)"></i> Nuevo usuario</span>
+        <button onclick="toggleCreateUserForm()" id="toggleCreateBtn" style="background:var(--primary-color);color:#fff;border:none;padding:.3rem .7rem;border-radius:6px;cursor:pointer;font-size:.75rem;font-weight:600"><i class="fas fa-chevron-down"></i> Crear</button>
+      </div>
+      <div id="createUserForm" style="display:none">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:.5rem">
+          <div>
+            <label style="font-size:.78rem;font-weight:600;color:#555;display:block;margin-bottom:.2rem">Nombre completo</label>
+            <input type="text" id="newUserName" class="info-edit-field" placeholder="Ej: María López" style="font-size:.85rem;padding:.45rem .6rem">
+          </div>
+          <div>
+            <label style="font-size:.78rem;font-weight:600;color:#555;display:block;margin-bottom:.2rem">Usuario</label>
+            <input type="text" id="newUserUsername" class="info-edit-field" placeholder="Ej: mlopez" style="font-size:.85rem;padding:.45rem .6rem">
+          </div>
+          <div>
+            <label style="font-size:.78rem;font-weight:600;color:#555;display:block;margin-bottom:.2rem">Contraseña (mín. 6)</label>
+            <input type="password" id="newUserPass" class="info-edit-field" placeholder="Contraseña" style="font-size:.85rem;padding:.45rem .6rem">
+          </div>
+          <div>
+            <label style="font-size:.78rem;font-weight:600;color:#555;display:block;margin-bottom:.2rem">Perfil</label>
+            <select id="newUserRole" class="info-edit-field" style="font-size:.85rem;padding:.45rem .6rem;background:#fff">
+              <option value="viewer">Usuario (solo lectura)</option>
+              <option value="admin">Admin (control total)</option>
+            </select>
+          </div>
+        </div>
+        <div style="display:flex;gap:.4rem;justify-content:flex-end">
+          <button onclick="toggleCreateUserForm()" style="background:#95a5a6;color:#fff;border:none;padding:.4rem .7rem;border-radius:6px;cursor:pointer;font-size:.8rem;font-weight:600">Cancelar</button>
+          <button onclick="handleCreateUser()" style="background:var(--primary-color);color:#fff;border:none;padding:.4rem .7rem;border-radius:6px;cursor:pointer;font-size:.8rem;font-weight:600;display:flex;align-items:center;gap:.3rem"><i class="fas fa-user-plus"></i> Crear usuario</button>
+        </div>
+      </div>
+    </div>
+    <div id="usersModalConfirm"></div>
+    <div id="usersModalList" style="margin-top:.5rem"></div>
   </div>
 </div>
 
@@ -529,6 +769,50 @@ function applyCourseTheme(cursoId) {
   }
 }
 
+// ==================== AUTH HELPERS ====================
+const AUTH_SESSION_KEY = 'planDigital_session';
+const AUTH_USERS_KEY = 'planDigital_users';
+
+async function hashPassword(password) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password + '::planDigital_salt_2025');
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function getUsersDB() {
+  try {
+    return JSON.parse(localStorage.getItem(AUTH_USERS_KEY)) || {};
+  } catch { return {}; }
+}
+
+function saveUsersDB(usersDB) {
+  localStorage.setItem(AUTH_USERS_KEY, JSON.stringify(usersDB));
+}
+
+function getUserDoc(usernameKey) {
+  const usersDB = getUsersDB();
+  return usersDB[usernameKey] || null;
+}
+
+function setUserDoc(usernameKey, userData) {
+  const usersDB = getUsersDB();
+  usersDB[usernameKey] = userData;
+  saveUsersDB(usersDB);
+}
+
+function removeUserDoc(usernameKey) {
+  const usersDB = getUsersDB();
+  delete usersDB[usernameKey];
+  saveUsersDB(usersDB);
+}
+
+function getAllUsersSorted() {
+  const usersDB = getUsersDB();
+  return Object.keys(usersDB).map(uid => ({ uid, ...usersDB[uid] })).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+}
+
 // Base list of predefined responsables (mutable — new entries can be added)
 let RESPONSABLES_BASE = [
   'Equipo directivo',
@@ -541,6 +825,10 @@ let RESPONSABLES_BASE = [
   'Community manager',
   'CEP'
 ];
+
+const TEMP_PREDEFINED_BASE = ['Primer trimestre', 'Segundo trimestre', 'Tercer trimestre'];
+let TEMP_PREDEFINED = [...TEMP_PREDEFINED_BASE];
+let HERRAMIENTAS_BASE = [];
 
 const SEED_DATA = {
   organizacion: {
@@ -583,12 +871,17 @@ const state = {
   taskFilter: 'todas',
   planData: {},
   estadosTareas: {},
+  comentariosTareas: {},
   gestionOpen: false,
   loading: true,
   editingLinea: null,
-  formSelectedResponsables: [], // responsables selected in the edit form (chip selector)
+  formSelectedResponsables: [],
   isNewLinea: false,
   selectedTransferLines: [],
+  // Auth
+  user: null,
+  userRole: 'viewer', // 'admin' or 'viewer'
+  authReady: false,
   // Consultas
   consultaAmbito: 'todos',
   consultaResponsable: 'todos',
@@ -606,7 +899,8 @@ const state = {
   pdfIntervencion: true,
   pdfMessage: null,
   editingInfoCard: null,
-  editingActEval: null
+  editingActEval: null,
+  confirmDeleteTask: null // taskId pending deletion confirmation
 };
 
 let unsubscribeFns = [];
@@ -645,8 +939,246 @@ async function seedCourse(cursoId) {
       });
     }
   }
-  await db.collection('planes').doc(cursoId).collection('estadosTareas').doc('global').set({ estados: {} });
+  await db.collection('planes').doc(cursoId).collection('estadosTareas').doc('global').set({ estados: {}, comentarios: {} });
 }
+
+// ==================== CURRENT CURSO ====================
+function getCurrentCurso() {
+  const now = new Date();
+  const month = now.getMonth();
+  const year = now.getFullYear();
+  if (month >= 8) {
+    return year + '-' + (year + 1);
+  } else {
+    return (year - 1) + '-' + year;
+  }
+}
+
+// ==================== AUTH SYSTEM ====================
+function isAdmin() {
+  return state.userRole === 'admin';
+}
+
+// Unified auth handler: detects if first setup or normal login
+state.needsAdminSetup = false;
+
+async function handleAuth() {
+  const username = document.getElementById('authUsername').value.trim();
+  const pass = document.getElementById('authPass').value;
+  const errorEl = document.getElementById('authError');
+  const btn = document.getElementById('authBtn');
+
+  if (!username || !pass) {
+    errorEl.textContent = 'Introduce usuario y contrase\u00f1a.';
+    errorEl.style.display = 'flex';
+    return;
+  }
+
+  if (pass.length < 6) {
+    errorEl.textContent = 'La contrase\u00f1a debe tener al menos 6 caracteres.';
+    errorEl.style.display = 'flex';
+    return;
+  }
+
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+    errorEl.textContent = 'El usuario solo puede contener letras, n\u00fameros y guiones bajos.';
+    errorEl.style.display = 'flex';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Accediendo...';
+  errorEl.style.display = 'none';
+
+  try {
+    const usernameKey = username.toLowerCase().trim();
+
+    if (state.needsAdminSetup) {
+      // --- CREAR CUENTA DE ADMINISTRADOR ---
+      const nameEl = document.getElementById('authName');
+      const name = nameEl ? nameEl.value.trim() : '';
+      if (!name) {
+        errorEl.textContent = 'Introduce tu nombre completo.';
+        errorEl.style.display = 'flex';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-user-plus"></i> Crear Cuenta de Administrador';
+        return;
+      }
+      if (username.length < 3) {
+        errorEl.textContent = 'El usuario debe tener al menos 3 caracteres.';
+        errorEl.style.display = 'flex';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-user-plus"></i> Crear Cuenta de Administrador';
+        return;
+      }
+
+      const hashedPass = await hashPassword(pass);
+      setUserDoc(usernameKey, {
+        name: name,
+        username: usernameKey,
+        passwordHash: hashedPass,
+        role: 'admin',
+        createdAt: Date.now()
+      });
+
+      const session = { uid: usernameKey, username: usernameKey, name: name, role: 'admin' };
+      sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+      state.user = session;
+      state.userRole = 'admin';
+      state._userName = name;
+      state.needsAdminSetup = false;
+
+      hideAuthOverlay();
+      if (state.courses.length === 0) {
+        await loadCourses();
+      } else {
+        applyRoleUI();
+        renderView();
+      }
+    } else {
+      // --- LOGIN NORMAL ---
+      const userData = getUserDoc(usernameKey);
+      if (!userData) {
+        errorEl.textContent = 'Usuario o contrase\u00f1a incorrectos.';
+        errorEl.style.display = 'flex';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Iniciar Sesión';
+        return;
+      }
+      const hashedPass = await hashPassword(pass);
+      if (userData.passwordHash !== hashedPass) {
+        errorEl.textContent = 'Usuario o contrase\u00f1a incorrectos.';
+        errorEl.style.display = 'flex';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Iniciar Sesión';
+        return;
+      }
+      const session = { uid: usernameKey, username: userData.username, name: userData.name, role: userData.role };
+      sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+      state.user = session;
+      state.userRole = userData.role || 'viewer';
+      state._userName = userData.name || '';
+      hideAuthOverlay();
+      if (state.courses.length === 0) {
+        await loadCourses();
+      } else {
+        applyRoleUI();
+        renderView();
+      }
+    }
+  } catch (err) {
+    console.error('Auth error:', err);
+    errorEl.textContent = 'Error: ' + err.message;
+    errorEl.style.display = 'flex';
+    btn.disabled = false;
+    btn.innerHTML = state.needsAdminSetup
+      ? '<i class="fas fa-user-plus"></i> Crear Cuenta de Administrador'
+      : '<i class="fas fa-sign-in-alt"></i> Iniciar Sesión';
+  }
+}
+
+function handleLogout() {
+  sessionStorage.removeItem(AUTH_SESSION_KEY);
+  state.user = null;
+  state.userRole = 'viewer';
+  state._userName = '';
+  unsubscribeFns.forEach(fn => fn());
+  unsubscribeFns = [];
+  if (state.currentCourse) localStorage.setItem('lastActiveCourse', state.currentCourse);
+  state.planData = {};
+  state.estadosTareas = {};
+  state.comentariosTareas = {};
+  state.currentCourse = '';
+  state.currentLinea = null;
+  document.getElementById('mainApp').style.display = 'none';
+  document.getElementById('portalInicio').style.display = 'flex';
+  document.getElementById('portalInicio').classList.remove('fade-out');
+  showAuthOverlay();
+}
+
+function updateUserBar() {
+  const badge = document.getElementById('userRoleBadge');
+  const name = document.getElementById('userDisplayName');
+  const course = document.getElementById('userBarCourse');
+  const bar = document.getElementById('userBar');
+  if (!bar) return;
+  if (state.user) {
+    bar.style.display = 'flex';
+    if (badge) {
+      badge.className = 'auth-role-badge ' + (isAdmin() ? 'admin' : 'viewer');
+      badge.innerHTML = isAdmin() ? '<i class="fas fa-crown"></i> Admin' : '<i class="fas fa-eye"></i> Usuario';
+    }
+    if (name) name.textContent = state._userName || state.user.name || '';
+    if (course) course.textContent = 'Curso ' + state.currentCourse;
+  } else {
+    bar.style.display = 'none';
+  }
+}
+
+function applyRoleUI() {
+  const courseSel = document.querySelector('.course-selector');
+  if (courseSel) courseSel.style.display = isAdmin() ? '' : 'none';
+  const gestionSection = document.querySelector('.gestion-section');
+  if (gestionSection) gestionSection.style.display = isAdmin() ? '' : 'none';
+  // Hide STEAM nav edit capabilities for viewers
+  updateUserBar();
+  // Note: renderView() will be called by the caller (enterApp)
+}
+
+async function restoreSession() {
+  try {
+    // Migration: move old localStorage session to sessionStorage
+    var oldSession = localStorage.getItem(AUTH_SESSION_KEY);
+    if (oldSession && !sessionStorage.getItem(AUTH_SESSION_KEY)) {
+      sessionStorage.setItem(AUTH_SESSION_KEY, oldSession);
+      localStorage.removeItem(AUTH_SESSION_KEY);
+    }
+    var raw = sessionStorage.getItem(AUTH_SESSION_KEY);
+    if (!raw) { checkUsersAndShowAuth(); return; }
+    const session = JSON.parse(raw);
+    if (!session || !session.uid || !session.username) { checkUsersAndShowAuth(); return; }
+    const userData = getUserDoc(session.uid);
+    if (!userData) {
+      sessionStorage.removeItem(AUTH_SESSION_KEY);
+      checkUsersAndShowAuth();
+      return;
+    }
+    state.user = session;
+    state.userRole = session.role || userData.role || 'viewer';
+    state._userName = session.name || userData.name || '';
+    hideAuthOverlay();
+    if (state.courses.length === 0) {
+      await loadCourses();
+    } else {
+      applyRoleUI();
+      renderView();
+    }
+  } catch (err) {
+    console.error('Session restore error:', err);
+    sessionStorage.removeItem(AUTH_SESSION_KEY);
+    checkUsersAndShowAuth();
+  }
+}
+
+function checkUsersAndShowAuth() {
+  const usersDB = getUsersDB();
+  const hasUsers = Object.keys(usersDB).length > 0;
+  state.needsAdminSetup = !hasUsers;
+  showAuthOverlay();
+}
+
+// Start: try to restore session or show login
+restoreSession();
+
+// Auth form keyboard listeners
+setTimeout(() => {
+  var passEl = document.getElementById('authPass');
+  if (passEl) passEl.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); handleAuth(); } });
+  var userEl = document.getElementById('authUsername');
+  if (userEl) userEl.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('authPass').focus(); } });
+  var nameEl = document.getElementById('authName');
+  if (nameEl) nameEl.addEventListener('keydown', function(e) { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('authUsername').focus(); } });
+}, 100);
 
 // ==================== LOAD COURSES ====================
 async function loadCourses() {
@@ -659,19 +1191,31 @@ async function loadCourses() {
     renderCourseSelect();
 
     if (courseList.length === 0) {
-      await seedCourse('2025-2026');
-      state.courses = ['2025-2026'];
-      state.currentCourse = '2025-2026';
+      const currentCurso = getCurrentCurso();
+      await seedCourse(currentCurso);
+      state.courses = [currentCurso];
+      state.currentCourse = currentCurso;
       renderCourseSelect();
       applyCourseTheme(state.currentCourse);
       setConnectionStatus(true);
     } else if (!state.currentCourse) {
-      state.currentCourse = courseList[courseList.length - 1];
+      const currentCurso = getCurrentCurso();
+      if (courseList.includes(currentCurso)) {
+        state.currentCourse = currentCurso;
+      } else {
+        state.currentCourse = courseList[courseList.length - 1];
+      }
     }
     applyCourseTheme(state.currentCourse);
     document.getElementById('courseSelect').value = state.currentCourse;
+    document.getElementById('portalCurso').textContent = 'Curso ' + state.currentCourse;
+    // Apply theme to the portal-inicio dynamically
+    const portal = document.getElementById('portalInicio');
+    if (portal) portal.style.background = 'var(--gradient)';
+    await loadGlobalCatalogos();
     await listenToCourseData();
-    enterApp();
+    // Show dynamic portal for 5 seconds, then auto-enter
+    startPortalCountdown();
   } catch (err) {
     console.error('Error loading courses:', err);
     setConnectionStatus(false);
@@ -700,8 +1244,8 @@ async function listenToCourseData() {
             descripcion: l.descripcion || '',
             tareasFormacion: l.tareasFormacion || [],
             tareasIntervencion: (l.tareasIntervencion || []).map(t => {
-              if (typeof t === 'string') return { texto: t, evaluacion: { responsables: [], herramientas: '', temporalizacion: [] } };
-              return { texto: t.texto || '', evaluacion: t.evaluacion || { responsables: [], herramientas: '', temporalizacion: [] } };
+              if (typeof t === 'string') return { texto: t, evaluacion: { responsables: [], herramientas: [], temporalizacion: [] } };
+              return { texto: t.texto || '', evaluacion: t.evaluacion || { responsables: [], herramientas: [], temporalizacion: [] } };
             }),
             evaluacion: l.evaluacion || { objeto: '', herramientas: '' },
             responsables: l.responsables || [],
@@ -712,6 +1256,14 @@ async function listenToCourseData() {
       });
       state.planData = data;
       state.loading = false;
+      // Re-sync currentLinea if viewing detalle (prevents stale data from remote edits)
+      if (state.currentLinea && state.viewState === 'detalle') {
+        const ambitoData = state.planData[state.currentAmbitoId];
+        if (ambitoData) {
+          const fresh = ambitoData.lineas.find(l => l.id === state.currentLinea.id);
+          if (fresh) state.currentLinea = fresh;
+        }
+      }
       setConnectionStatus(true);
       renderView();
     }, err => {
@@ -724,6 +1276,7 @@ async function listenToCourseData() {
     .onSnapshot(doc => {
       if (doc.exists()) {
         state.estadosTareas = doc.data().estados || {};
+        state.comentariosTareas = doc.data().comentarios || {};
         renderView();
       }
     }, err => {
@@ -734,12 +1287,33 @@ async function listenToCourseData() {
 }
 
 // ==================== NAVIGATION ====================
+var _portalTimer = null;
+
+function startPortalCountdown() {
+  // Clear any previous timer
+  if (_portalTimer) clearTimeout(_portalTimer);
+  // Reset progress bar animation
+  const bar = document.getElementById('portalProgress');
+  if (bar) {
+    bar.classList.remove('active');
+    void bar.offsetWidth; // force reflow
+    bar.classList.add('active');
+  }
+  // Auto-enter after 5 seconds
+  _portalTimer = setTimeout(() => {
+    _portalTimer = null;
+    if (state.currentCourse) enterApp();
+  }, 5000);
+}
+
 function enterApp() {
+  if (_portalTimer) { clearTimeout(_portalTimer); _portalTimer = null; }
   document.getElementById('portalInicio').classList.add('fade-out');
   setTimeout(() => {
     document.getElementById('portalInicio').style.display = 'none';
     document.getElementById('mainApp').style.display = 'block';
     state.viewState = 'inicio';
+    applyRoleUI();
     renderView();
   }, 500);
 }
@@ -747,6 +1321,41 @@ function enterApp() {
 document.getElementById('portalInicio').addEventListener('click', function() {
   if (state.currentCourse) enterApp();
 });
+
+function showAuthOverlay() {
+  const overlay = document.getElementById('authOverlay');
+  if (!overlay) return;
+  overlay.style.display = 'flex';
+  // Reset form state
+  document.getElementById('authError').style.display = 'none';
+  document.getElementById('authSuccess').style.display = 'none';
+  document.getElementById('authPass').value = '';
+  const btn = document.getElementById('authBtn');
+  btn.disabled = false;
+  if (state.needsAdminSetup) {
+    document.getElementById('authSetupSection').style.display = 'block';
+    btn.innerHTML = '<i class="fas fa-user-plus"></i> Crear Cuenta de Administrador';
+  } else {
+    document.getElementById('authSetupSection').style.display = 'none';
+    btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Iniciar Sesión';
+  }
+  // Show last active course if available
+  const lastCourse = localStorage.getItem('lastActiveCourse');
+  const lastCourseEl = document.getElementById('authLastCourse');
+  if (lastCourseEl && lastCourse) {
+    lastCourseEl.textContent = 'Curso ' + lastCourse;
+    lastCourseEl.style.display = 'block';
+  } else if (lastCourseEl) {
+    lastCourseEl.style.display = 'none';
+  }
+  // Focus username field
+  setTimeout(() => { document.getElementById('authUsername').focus(); }, 100);
+}
+
+function hideAuthOverlay() {
+  const overlay = document.getElementById('authOverlay');
+  if (overlay) overlay.style.display = 'none';
+}
 
 function goInicio() {
   state.viewState = 'inicio';
@@ -771,6 +1380,7 @@ function goLineaDetalle(linea) {
   state.taskFilter = 'todas';
   state.editingInfoCard = null;
   state.editingActEval = null;
+  state.confirmDeleteTask = null;
   state.viewState = 'detalle';
   renderView();
 }
@@ -811,7 +1421,7 @@ function toggleGestion() {
 // ==================== COURSE SELECT ====================
 function renderCourseSelect() {
   const sel = document.getElementById('courseSelect');
-  sel.innerHTML = state.courses.map(c => `<option value="${c}">Curso ${c}</option>`).join('');
+  sel.innerHTML = state.courses.map(c => `<option value="${escapeAttr(c)}">Curso ${escapeHtml(c)}</option>`).join('');
   sel.value = state.currentCourse;
 }
 
@@ -895,16 +1505,16 @@ function renderLineas(container) {
             ${linea.steam4 ? `<span class="badge badge-steam" onclick="event.stopPropagation();goSteam()"><i class="fas fa-robot"></i> STEAM 4.0</span>` : ''}
           </div>
         </div>
-        <div class="linea-actions">
+        ${isAdmin() ? `<div class="linea-actions">
           <button class="linea-action-btn edit" onclick="event.stopPropagation();openEditLinea(${escapeAttr(JSON.stringify(linea))}, false)" title="Editar"><i class="fas fa-edit"></i></button>
           <button class="linea-action-btn delete" onclick="event.stopPropagation();confirmDeleteLinea(${escapeAttr(JSON.stringify(linea))})" title="Eliminar"><i class="fas fa-trash"></i></button>
-        </div>
+        </div>` : ''}
       </li>`;
   });
 
   html += `</ul>`;
 
-  if (ambitoData.lineas.length < 5) {
+  if (ambitoData.lineas.length < 5 && isAdmin()) {
     html += `<button class="add-linea-btn" onclick="openEditLinea(null, true)"><i class="fas fa-plus"></i> Añadir línea (${ambitoData.lineas.length}/5)</button>`;
   }
 
@@ -917,6 +1527,16 @@ function renderDetalle(container) {
     container.innerHTML = '';
     return;
   }
+  // Preserve unsaved comment text across re-renders (e.g. remote snapshot updates)
+  container.querySelectorAll('.tarea-comentario-textarea').forEach(ta => {
+    const match = ta.id.match(/^tareaComentario-(.+)$/);
+    if (match) {
+      const val = ta.value.trim();
+      if (val !== (state.comentariosTareas[match[1]] || '')) {
+        state.comentariosTareas[match[1]] = val;
+      }
+    }
+  });
   const linea = state.currentLinea;
   const ambitoId = state.currentAmbitoId;
 
@@ -936,18 +1556,22 @@ function renderDetalle(container) {
       </div>`;
 
   // Formation tasks
-  if ((state.taskFilter === 'todas' || state.taskFilter === 'formacion') && linea.tareasFormacion.length > 0) {
+  const showFormacion = state.taskFilter === 'todas' || state.taskFilter === 'formacion';
+  if (showFormacion && linea.tareasFormacion.length > 0) {
     html += `<div><h3 style="margin-top:1.5rem;margin-bottom:1rem;color:#2c3e50">Tareas de Formación</h3>`;
     linea.tareasFormacion.forEach((tarea, idx) => {
       const taskId = `${ambitoId}-${linea.id}-formacion-${idx}`;
       const estado = state.estadosTareas[taskId] || 'no-iniciado';
-      html += renderTaskItem(taskId, tarea, 'fas fa-chalkboard-teacher', 'Tarea de formación', estado);
+      const texto = typeof tarea === 'string' ? tarea : tarea.texto;
+      const evalData = typeof tarea === 'object' ? tarea.evaluacion : null;
+      html += renderTaskItem(taskId, texto, 'fas fa-chalkboard-teacher', 'Tarea de formación', estado, true, evalData);
     });
     html += `</div>`;
   }
 
   // Intervention tasks — now include per-actuación evaluation data
-  if ((state.taskFilter === 'todas' || state.taskFilter === 'intervencion') && linea.tareasIntervencion.length > 0) {
+  const showIntervencion = state.taskFilter === 'todas' || state.taskFilter === 'intervencion';
+  if (showIntervencion && linea.tareasIntervencion.length > 0) {
     html += `<div><h3 style="margin-top:1.5rem;margin-bottom:1rem;color:#2c3e50">Actuaciones en el centro</h3>`;
     linea.tareasIntervencion.forEach((tarea, idx) => {
       const taskId = `${ambitoId}-${linea.id}-intervencion-${idx}`;
@@ -959,6 +1583,32 @@ function renderDetalle(container) {
     html += `</div>`;
   }
 
+  // Empty state when no tasks exist
+  const hasFormacion = (linea.tareasFormacion || []).length > 0;
+  const hasIntervencion = (linea.tareasIntervencion || []).length > 0;
+  if (!hasFormacion && !hasIntervencion) {
+    html += `<div style="text-align:center;padding:2rem 1rem;color:#999">
+      <i class="fas fa-clipboard-list" style="font-size:2.5rem;margin-bottom:.8rem;opacity:.4;display:block"></i>
+      <p style="font-size:1rem;margin-bottom:.3rem">No hay actuaciones registradas aún</p>
+      <p style="font-size:.85rem">Añade la primera actuación usando el botón de abajo</p>
+    </div>`;
+  } else if (showFormacion && !hasFormacion && hasIntervencion) {
+    html += `<div style="text-align:center;padding:1.5rem 1rem;color:#999;font-size:.9rem">
+      <i class="fas fa-chalkboard-teacher" style="margin-right:.4rem"></i> No hay tareas de formación
+    </div>`;
+  } else if (showIntervencion && hasFormacion && !hasIntervencion) {
+    html += `<div style="text-align:center;padding:1.5rem 1rem;color:#999;font-size:.9rem">
+      <i class="fas fa-tasks" style="margin-right:.4rem"></i> No hay actuaciones en el centro
+    </div>`;
+  }
+
+  // "Introducir nueva actuación" button (only for admins)
+  if (isAdmin()) {
+    html += `<button class="add-linea-btn" onclick="openNewActuacionModal()" style="margin-top:1.5rem;border-color:var(--success-color);color:var(--success-color)">
+      <i class="fas fa-plus-circle"></i> Introducir nueva actuación
+    </button>`;
+  }
+
   html += `
   </div>`;
 
@@ -967,53 +1617,98 @@ function renderDetalle(container) {
   attachChipRemoveHandlers();
 }
 
+function buildViewChip(text, chipClass, taskId, fieldType) {
+  const canEdit = isAdmin();
+  const safeText = text.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  const actions = canEdit ? `<i class="fas fa-pen eval-chip-edit" onclick="startEditEvalChip('${taskId.replace(/'/g, "\\'")}','${fieldType}','${safeText}')" title="Editar"></i><i class="fas fa-times eval-chip-del" onclick="deleteEvalChip('${taskId.replace(/'/g, "\\'")}','${fieldType}','${safeText}')" title="Eliminar"></i>` : '';
+  return `<span class="eval-chip ${chipClass}" data-value="${escapeAttr(text)}">${escapeHtml(text)}${actions}</span>`;
+}
+
 function renderTaskItem(taskId, texto, icono, titulo, estado, isActuacion, evalData) {
-  const editing = isActuacion && state.editingActEval === taskId;
-  const ev = evalData || { responsables: [], herramientas: '', temporalizacion: [] };
-  const hasEval = ev.responsables.length > 0 || ev.herramientas || ev.temporalizacion.length > 0;
+  const editing = state.editingActEval === taskId;
+  // Normalize herramientas: can be string (legacy) or array
+  let herrArray = [];
+  if (evalData && Array.isArray(evalData.herramientas)) {
+    herrArray = evalData.herramientas;
+  } else if (evalData && evalData.herramientas && typeof evalData.herramientas === 'string') {
+    herrArray = evalData.herramientas.split(',').map(s => s.trim()).filter(Boolean);
+  }
+  const ev = {
+    responsables: (evalData && evalData.responsables) || [],
+    herramientas: herrArray,
+    temporalizacion: (evalData && evalData.temporalizacion) || []
+  };
+  const hasEval = ev.responsables.length > 0 || ev.herramientas.length > 0 || ev.temporalizacion.length > 0;
   const safeTaskId = taskId.replace(/'/g, "\\'");
+  const canEdit = isAdmin();
+
+  // Sorted chips for view mode
+  const sortedResp = [...ev.responsables].sort();
+  const sortedHerr = [...ev.herramientas].sort();
+  const sortedTemp = [...ev.temporalizacion].sort();
 
   let evalHtml = '';
-  if (isActuacion) {
+  {
     if (editing) {
       evalHtml = `
         <div class="tarea-eval-section editing" id="actEvalBlock-${safeTaskId}">
           <div class="tarea-eval-header">
             <h5><i class="fas fa-clipboard-check"></i> Evaluación</h5>
           </div>
-          <div class="eval-field-label">Responsables</div>
-          <div class="info-chips" id="actRespChips-${safeTaskId}">
-            ${(ev.responsables||[]).map(r => '<span class="info-chip resp-chip">' + escapeHtml(r) + '<i class="fas fa-times"></i></span>').join('')}
+          <div class="eval-table-edit-row">
+            <div class="eval-table-edit-field">
+              <label><i class="fas fa-user" style="color:var(--primary-color)"></i> Responsables</label>
+              <div class="info-chips" id="actRespChips-${safeTaskId}">
+                ${(ev.responsables||[]).sort().map(r => '<span class="info-chip resp-chip">' + escapeHtml(r) + '<i class="fas fa-times"></i></span>').join('')}
+              </div>
+              <div class="info-add-row">
+                <select id="actRespSelect-${safeTaskId}">
+                  <option value="">-- Seleccionar --</option>
+                  ${getAllInfoResponsables(ev.responsables||[]).map(r => '<option value="' + escapeAttr(r) + '">' + escapeHtml(r) + '</option>').join('')}
+                </select>
+                <button class="info-add-btn" onclick="addActRespFromSelect('${safeTaskId}')"><i class="fas fa-plus"></i></button>
+              </div>
+              <div class="info-new-row">
+                <input class="info-new-input" type="text" id="actRespNewInput-${safeTaskId}" placeholder="Nuevo responsable..." onkeydown="if(event.key==='Enter'){event.preventDefault();addActRespNew('${safeTaskId}')}">
+                <button class="info-new-btn" onclick="addActRespNew('${safeTaskId}')"><i class="fas fa-user-plus"></i> Crear</button>
+              </div>
+            </div>
+            <div class="eval-table-edit-field">
+              <label><i class="fas fa-tools" style="color:var(--warning-color)"></i> Herramientas de evaluación</label>
+              <div class="info-chips" id="actHerrChips-${safeTaskId}">
+                ${sortedHerr.map(h => '<span class="info-chip" style="background:rgba(243,156,18,.15);color:#e67e22">' + escapeHtml(h) + '<i class="fas fa-times"></i></span>').join('')}
+              </div>
+              <div class="info-add-row">
+                <select id="actHerrSelect-${safeTaskId}">
+                  <option value="">-- Seleccionar --</option>
+                  ${getAvailableHerrOptions(ev.herramientas||[]).map(h => '<option value="' + escapeAttr(h) + '">' + escapeHtml(h) + '</option>').join('')}
+                </select>
+                <button class="info-add-btn" onclick="addActHerrFromSelect('${safeTaskId}')"><i class="fas fa-plus"></i></button>
+              </div>
+              <div class="info-new-row">
+                <input class="info-new-input" type="text" id="actHerrNewInput-${safeTaskId}" placeholder="Nueva herramienta..." onkeydown="if(event.key==='Enter'){event.preventDefault();addActHerrNew('${safeTaskId}')}">
+                <button class="info-new-btn" onclick="addActHerrNew('${safeTaskId}')"><i class="fas fa-plus"></i> Añadir herramienta</button>
+              </div>
+            </div>
+            <div class="eval-table-edit-field">
+              <label><i class="fas fa-calendar-alt" style="color:var(--success-color)"></i> Temporalización</label>
+              <div class="info-chips" id="actTempChips-${safeTaskId}">
+                ${(ev.temporalizacion||[]).sort().map(t => '<span class="info-chip temp-chip">' + escapeHtml(t) + '<i class="fas fa-times"></i></span>').join('')}
+              </div>
+              <div class="info-add-row">
+                <select id="actTempSelect-${safeTaskId}">
+                  <option value="">-- Seleccionar --</option>
+                  ${getAvailableTempOptions(ev.temporalizacion||[]).map(t => '<option value="' + escapeAttr(t) + '">' + escapeHtml(t) + '</option>').join('')}
+                </select>
+                <button class="info-add-btn" onclick="addActTempFromSelect('${safeTaskId}')"><i class="fas fa-plus"></i></button>
+              </div>
+              <div class="info-new-row">
+                <input class="info-new-input" type="text" id="actTempNewInput-${safeTaskId}" placeholder="Otro período..." onkeydown="if(event.key==='Enter'){event.preventDefault();addActTempNew('${safeTaskId}')}">
+                <button class="info-new-btn" onclick="addActTempNew('${safeTaskId}')"><i class="fas fa-plus"></i> Añadir</button>
+              </div>
+            </div>
           </div>
-          <div class="info-add-row">
-            <select id="actRespSelect-${safeTaskId}">
-              <option value="">-- Seleccionar --</option>
-              ${getAllInfoResponsables(ev.responsables||[]).map(r => '<option value="' + escapeAttr(r) + '">' + escapeHtml(r) + '</option>').join('')}
-            </select>
-            <button class="info-add-btn" onclick="addActRespFromSelect('${safeTaskId}')"><i class="fas fa-plus"></i></button>
-          </div>
-          <div class="info-new-row">
-            <input class="info-new-input" type="text" id="actRespNewInput-${safeTaskId}" placeholder="Nuevo responsable..." onkeydown="if(event.key==='Enter'){event.preventDefault();addActRespNew('${safeTaskId}')}">
-            <button class="info-new-btn" onclick="addActRespNew('${safeTaskId}')"><i class="fas fa-user-plus"></i> Crear</button>
-          </div>
-          <div class="eval-field-label">Herramientas de evaluación</div>
-          <input class="info-edit-field" type="text" id="actHerrInput-${safeTaskId}" value="${escapeAttr(ev.herramientas||'')}">
-          <div class="eval-field-label">Temporalización</div>
-          <div class="info-chips" id="actTempChips-${safeTaskId}">
-            ${(ev.temporalizacion||[]).map(t => '<span class="info-chip temp-chip">' + escapeHtml(t) + '<i class="fas fa-times"></i></span>').join('')}
-          </div>
-          <div class="info-add-row">
-            <select id="actTempSelect-${safeTaskId}">
-              <option value="">-- Seleccionar --</option>
-              ${getAvailableTempOptions(ev.temporalizacion||[]).map(t => '<option value="' + escapeAttr(t) + '">' + escapeHtml(t) + '</option>').join('')}
-            </select>
-            <button class="info-add-btn" onclick="addActTempFromSelect('${safeTaskId}')"><i class="fas fa-plus"></i></button>
-          </div>
-          <div class="info-new-row">
-            <input class="info-new-input" type="text" id="actTempNewInput-${safeTaskId}" placeholder="Otro período..." onkeydown="if(event.key==='Enter'){event.preventDefault();addActTempNew('${safeTaskId}')}">
-            <button class="info-new-btn" onclick="addActTempNew('${safeTaskId}')"><i class="fas fa-plus"></i> Añadir</button>
-          </div>
-          <div class="info-edit-row">
+          <div class="info-edit-row" style="margin-top:1rem">
             <button class="btn-secondary" onclick="cancelEditActEval()">Cancelar</button>
             <button class="btn-primary" onclick="saveActEval('${safeTaskId}')"><i class="fas fa-save"></i> Guardar</button>
           </div>
@@ -1023,28 +1718,74 @@ function renderTaskItem(taskId, texto, icono, titulo, estado, isActuacion, evalD
         <div class="tarea-eval-section" id="actEvalBlock-${safeTaskId}">
           <div class="tarea-eval-header">
             <h5><i class="fas fa-clipboard-check"></i> Evaluación</h5>
-            <button class="info-edit-btn" onclick="startEditActEval('${safeTaskId}')"><i class="fas fa-pen"></i> Editar</button>
+            ${canEdit ? `<button class="info-edit-btn" onclick="startEditActEval('${safeTaskId}')"><i class="fas fa-pen"></i> Editar</button>` : ''}
           </div>
           ${hasEval ? `
-            <div class="tarea-eval-view">
-              ${(ev.responsables||[]).map(r => '<span class="ev-tag"><i class="fas fa-user"></i> ' + escapeHtml(r) + '</span>').join('')}
-              ${ev.herramientas ? '<span class="ev-tag"><i class="fas fa-tools"></i> ' + escapeHtml(ev.herramientas) + '</span>' : ''}
-              ${(ev.temporalizacion||[]).map(t => '<span class="ev-tag temp"><i class="fas fa-calendar-alt"></i> ' + escapeHtml(t) + '</span>').join('')}
-            </div>
-          ` : '<div style="font-size:.82rem;color:#999;font-style:italic">Sin datos de evaluación</div>'}
+            <table class="eval-table">
+              <thead>
+                <tr>
+                  <th><i class="fas fa-user" style="color:var(--primary-color)"></i> Responsables</th>
+                  <th><i class="fas fa-tools" style="color:var(--warning-color)"></i> Herramientas</th>
+                  <th><i class="fas fa-calendar-alt" style="color:var(--success-color)"></i> Temporalización</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <div class="eval-cell-chips" id="actViewResp-${safeTaskId}">
+                      ${sortedResp.map(r => buildViewChip(r, 'resp', safeTaskId, 'responsable')).join('')}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="eval-cell-chips" id="actViewHerr-${safeTaskId}">
+                      ${sortedHerr.map(h => buildViewChip(h, 'herr', safeTaskId, 'herramienta')).join('')}
+                    </div>
+                  </td>
+                  <td>
+                    <div class="eval-cell-chips" id="actViewTemp-${safeTaskId}">
+                      ${sortedTemp.map(t => buildViewChip(t, 'temp', safeTaskId, 'temporalizacion')).join('')}
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          ` : `<table class="eval-table"><tbody><tr class="eval-empty-row"><td colspan="3">Sin datos de evaluación</td></tr></tbody></table>`}
         </div>`;
     }
   }
 
+  const deleting = state.confirmDeleteTask === taskId;
+
   return `
-    <div class="tarea-item">
-      <h4><i class="${icono}"></i> ${escapeHtml(texto)}</h4>
+    <div class="tarea-item${deleting ? ' tarea-deleting' : ''}">
+      <h4>
+        <i class="${icono}"></i> ${escapeHtml(texto)}
+        ${canEdit ? `<button class="tarea-delete-btn" onclick="confirmDeleteActuacion('${safeTaskId}')" title="Eliminar actuación"><i class="fas fa-trash-alt"></i></button>` : ''}
+      </h4>
       ${evalHtml}
-      <div class="estado-tarea">
-        <button class="estado-btn no-iniciado ${estado==='no-iniciado'?'active':''}" onclick="handleEstadoChange('${taskId}','no-iniciado')">No iniciado</button>
+      ${deleting ? `
+        <div class="tarea-delete-confirm">
+          <span><i class="fas fa-exclamation-triangle" style="color:var(--accent-color)"></i> ¿Eliminar esta actuación?</span>
+          <div style="display:flex;gap:.4rem">
+            <button class="btn-secondary" onclick="cancelDeleteActuacion()" style="padding:.35rem .8rem;font-size:.8rem">Cancelar</button>
+            <button class="btn-danger" onclick="executeDeleteActuacion('${safeTaskId}')" style="padding:.35rem .8rem;font-size:.8rem"><i class="fas fa-trash"></i> Eliminar</button>
+          </div>
+        </div>
+      ` : ''}
+      ${canEdit ? `<div class="estado-tarea">
+        <button class="estado-btn no-iniciado ${estado==='no-iniciado'?'active':''}" onclick="handleEstadoChange('${taskId}','no-iniciado')">No iniciada</button>
         <button class="estado-btn en-proceso ${estado==='en-proceso'?'active':''}" onclick="handleEstadoChange('${taskId}','en-proceso')">En proceso</button>
-        <button class="estado-btn conseguido ${estado==='conseguido'?'active':''}" onclick="handleEstadoChange('${taskId}','conseguido')">Conseguido</button>
+        <button class="estado-btn conseguido ${estado==='conseguido'?'active':''}" onclick="handleEstadoChange('${taskId}','conseguido')">Conseguida</button>
       </div>
+      <div class="tarea-comentario">
+        <label class="tarea-comentario-label" for="tareaComentario-${safeTaskId}">Comentario (opcional)</label>
+        <textarea class="tarea-comentario-textarea" id="tareaComentario-${safeTaskId}" placeholder="Escribe un comentario..." onblur="handleComentarioChange('${taskId}',this.value)">${escapeHtml(state.comentariosTareas[taskId] || '')}</textarea>
+      </div>` : `<div class="estado-tarea">
+        <button class="estado-btn no-iniciado ${estado==='no-iniciado'?'active':''}" style="pointer-events:none;opacity:.7">No iniciada</button>
+        <button class="estado-btn en-proceso ${estado==='en-proceso'?'active':''}" style="pointer-events:none;opacity:.7">En proceso</button>
+        <button class="estado-btn conseguido ${estado==='conseguido'?'active':''}" style="pointer-events:none;opacity:.7">Conseguida</button>
+      </div>
+      ${(state.comentariosTareas[taskId] || '') ? `<div class="tarea-comentario tarea-comentario-readonly"><label class="tarea-comentario-label">Comentario</label><div class="tarea-comentario-texto">${escapeHtml(state.comentariosTareas[taskId])}</div></div>` : ''}`}
     </div>`;
 }
 
@@ -1177,21 +1918,25 @@ function renderConsultaResultados() {
   Object.entries(state.planData).forEach(([ambitoId, ambito]) => {
     if (state.consultaAmbito !== 'todos' && state.consultaAmbito !== ambitoId) return;
     ambito.lineas.forEach(linea => {
-      const matchResp = state.consultaResponsable === 'todos' || linea.responsables.includes(state.consultaResponsable) || linea.tareasIntervencion.some(t => typeof t === 'object' && t.evaluacion && t.evaluacion.responsables && t.evaluacion.responsables.includes(state.consultaResponsable));
-      const matchTrim = state.consultaTrimestre === 'todos' || linea.temporalizacion.includes(state.consultaTrimestre) || linea.tareasIntervencion.some(t => typeof t === 'object' && t.evaluacion && t.evaluacion.temporalizacion && t.evaluacion.temporalizacion.includes(state.consultaTrimestre));
+      const matchResp = state.consultaResponsable === 'todos' || linea.responsables.includes(state.consultaResponsable) || linea.tareasFormacion.some(t => typeof t === 'object' && t.evaluacion && t.evaluacion.responsables && t.evaluacion.responsables.includes(state.consultaResponsable)) || linea.tareasIntervencion.some(t => typeof t === 'object' && t.evaluacion && t.evaluacion.responsables && t.evaluacion.responsables.includes(state.consultaResponsable));
+      const matchTrim = state.consultaTrimestre === 'todos' || linea.temporalizacion.includes(state.consultaTrimestre) || linea.tareasFormacion.some(t => typeof t === 'object' && t.evaluacion && t.evaluacion.temporalizacion && t.evaluacion.temporalizacion.includes(state.consultaTrimestre)) || linea.tareasIntervencion.some(t => typeof t === 'object' && t.evaluacion && t.evaluacion.temporalizacion && t.evaluacion.temporalizacion.includes(state.consultaTrimestre));
       if (matchResp && matchTrim) {
         if (state.consultaTipo === 'todos' || state.consultaTipo === 'formacion') {
           linea.tareasFormacion.forEach(tarea => {
+            const texto = typeof tarea === 'string' ? tarea : (tarea.texto || '');
+            const ev = typeof tarea === 'object' && tarea.evaluacion ? tarea.evaluacion : {};
+            const respList = (ev.responsables && ev.responsables.length > 0) ? ev.responsables : linea.responsables;
+            const tempList = (ev.temporalizacion && ev.temporalizacion.length > 0) ? ev.temporalizacion : linea.temporalizacion;
             results += `<div class="resultado-item">
-              <h4>${escapeHtml(tarea)}</h4>
+              <h4>${escapeHtml(texto)}</h4>
               <div style="margin-top:.8rem">
                 <span class="badge badge-ambito">${escapeHtml(ambito.titulo)}</span>
                 <span class="badge badge-tipo">Formación</span>
                 ${linea.steam4 ? '<span class="badge badge-steam"><i class="fas fa-robot"></i> STEAM 4.0</span>' : ''}
-                ${linea.temporalizacion.map(t => `<span class="badge badge-trimestre">${escapeHtml(t)}</span>`).join('')}
+                ${tempList.map(t => `<span class="badge badge-trimestre">${escapeHtml(t)}</span>`).join('')}
               </div>
               <p style="margin-top:.8rem"><strong>Línea:</strong> Línea ${linea.id}: ${escapeHtml(linea.titulo)}</p>
-              <p style="margin-top:.5rem"><strong>Responsables:</strong> ${escapeHtml(linea.responsables.join(', '))}</p>
+              <p style="margin-top:.5rem"><strong>Responsables:</strong> ${escapeHtml(respList.join(', '))}</p>
             </div>`;
           });
         }
@@ -1211,7 +1956,7 @@ function renderConsultaResultados() {
               </div>
               <p style="margin-top:.8rem"><strong>Línea:</strong> Línea ${linea.id}: ${escapeHtml(linea.titulo)}</p>
               <p style="margin-top:.5rem"><strong>Responsables:</strong> ${escapeHtml(respList.join(', '))}</p>
-              ${ev.herramientas ? '<p style="margin-top:.3rem"><strong>Herramientas:</strong> ' + escapeHtml(ev.herramientas) + '</p>' : ''}
+              ${ev.herramientas ? '<p style="margin-top:.3rem"><strong>Herramientas:</strong> ' + escapeHtml(Array.isArray(ev.herramientas) ? ev.herramientas.join(', ') : ev.herramientas) + '</p>' : ''}
             </div>`;
           });
         }
@@ -1238,9 +1983,9 @@ function renderPdf(container) {
         <div class="filtro-pdf-group">
           <h4>Estados de tareas</h4>
           <div class="checkbox-group">
-            <div class="checkbox-item"><input type="checkbox" id="pdfNI" ${state.pdfNoIniciado?'checked':''} onchange="state.pdfNoIniciado=this.checked"><label>No iniciado</label></div>
+            <div class="checkbox-item"><input type="checkbox" id="pdfNI" ${state.pdfNoIniciado?'checked':''} onchange="state.pdfNoIniciado=this.checked"><label>No iniciada</label></div>
             <div class="checkbox-item"><input type="checkbox" id="pdfEP" ${state.pdfEnProceso?'checked':''} onchange="state.pdfEnProceso=this.checked"><label>En proceso</label></div>
-            <div class="checkbox-item"><input type="checkbox" id="pdfCS" ${state.pdfConseguido?'checked':''} onchange="state.pdfConseguido=this.checked"><label>Conseguido</label></div>
+            <div class="checkbox-item"><input type="checkbox" id="pdfCS" ${state.pdfConseguido?'checked':''} onchange="state.pdfConseguido=this.checked"><label>Conseguida</label></div>
           </div>
         </div>
         <div class="filtro-pdf-group">
@@ -1268,14 +2013,48 @@ function renderPdf(container) {
 
 // ==================== ESTADO CHANGE ====================
 async function handleEstadoChange(taskId, estado) {
+  const oldEstado = state.estadosTareas[taskId] || 'no-iniciado';
   const newEstados = { ...state.estadosTareas, [taskId]: estado };
   state.estadosTareas = newEstados;
   try {
-    await db.collection('planes').doc(state.currentCourse).collection('estadosTareas').doc('global').set({ estados: newEstados });
+    await db.collection('planes').doc(state.currentCourse).collection('estadosTareas').doc('global').set({ estados: newEstados, comentarios: state.comentariosTareas }, { merge: true });
+    renderView();
   } catch (err) {
     console.error('Error saving estado:', err);
+    // Rollback optimistic update
+    state.estadosTareas[taskId] = oldEstado;
+    renderView();
+    // Show error toast AFTER renderView so it's not destroyed
+    const fb = document.createElement('div');
+    fb.style.cssText = 'position:fixed;top:1rem;left:50%;transform:translateX(-50%);padding:.5rem 1rem;border-radius:8px;background:#f8d7da;color:#721c24;font-weight:600;font-size:.85rem;z-index:5000;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:feedbackFade 2s ease forwards';
+    fb.innerHTML = '<i class="fas fa-times-circle"></i> Error al guardar estado';
+    document.body.appendChild(fb);
+    setTimeout(() => fb.remove(), 2200);
   }
-  renderView();
+}
+
+// ==================== COMENTARIO CHANGE ====================
+async function handleComentarioChange(taskId, value) {
+  const trimmed = (value || '').trim();
+  const newComentarios = { ...state.comentariosTareas };
+  if (trimmed) {
+    newComentarios[taskId] = trimmed;
+  } else {
+    delete newComentarios[taskId];
+  }
+  state.comentariosTareas = newComentarios;
+  try {
+    await db.collection('planes').doc(state.currentCourse).collection('estadosTareas').doc('global').set({ estados: state.estadosTareas, comentarios: newComentarios }, { merge: true });
+  } catch (err) {
+    console.error('Error saving comentario:', err);
+    const ta = document.getElementById('tareaComentario-' + taskId);
+    if (ta) ta.style.borderColor = 'var(--accent-color)';
+    const fb = document.createElement('div');
+    fb.style.cssText = 'position:fixed;top:1rem;left:50%;transform:translateX(-50%);padding:.5rem 1rem;border-radius:8px;background:#f8d7da;color:#721c24;font-weight:600;font-size:.85rem;z-index:5000;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:feedbackFade 2s ease forwards';
+    fb.innerHTML = '<i class="fas fa-times-circle"></i> Error al guardar comentario';
+    document.body.appendChild(fb);
+    setTimeout(() => { fb.remove(); if (ta) ta.style.borderColor = ''; }, 2200);
+  }
 }
 
 // ==================== COURSE MODAL ====================
@@ -1313,10 +2092,10 @@ function renderCourseListModal() {
           ${isProtected ? '<span class="protected-badge"><i class="fas fa-lock"></i> Original</span>' : ''}
         </div>
         <div class="course-list-actions">
-          <button class="course-action-btn clear" ${isProtected ? 'disabled title="El curso original no se puede borrar"' : `onclick="confirmClearCourse('${curso}')"`} title="Borrar todos los datos del curso">
+          <button class="course-action-btn clear" ${isProtected ? 'disabled title="El curso original no se puede borrar"' : `onclick="confirmClearCourse('${jsEscape(curso)}')"`} title="Borrar todos los datos del curso">
             <i class="fas fa-eraser"></i> Borrar datos
           </button>
-          <button class="course-action-btn delete" ${isProtected ? 'disabled title="El curso original no se puede eliminar"' : `onclick="confirmDeleteCourse('${curso}')"`} title="Eliminar el curso completo">
+          <button class="course-action-btn delete" ${isProtected ? 'disabled title="El curso original no se puede eliminar"' : `onclick="confirmDeleteCourse('${jsEscape(curso)}')"`} title="Eliminar el curso completo">
             <i class="fas fa-trash"></i> Eliminar
           </button>
         </div>
@@ -1383,7 +2162,7 @@ async function executeCourseAction() {
           lineas: []
         });
       }
-      await db.collection('planes').doc(courseId).collection('estadosTareas').doc('global').set({ estados: {} });
+      await db.collection('planes').doc(courseId).collection('estadosTareas').doc('global').set({ estados: {}, comentarios: {} });
 
       // If we're viewing this course, refresh
       if (state.currentCourse === courseId) {
@@ -1411,13 +2190,21 @@ async function createEmptyCourse(cursoId) {
       lineas: []
     });
   }
-  await db.collection('planes').doc(cursoId).collection('estadosTareas').doc('global').set({ estados: {} });
+  await db.collection('planes').doc(cursoId).collection('estadosTareas').doc('global').set({ estados: {}, comentarios: {} });
 }
 
 async function handleCreateCourse() {
   const name = document.getElementById('newCourseInput').value.trim();
   if (!name) return;
   const msgEl = document.getElementById('courseModalMessage');
+  if (!/^\d{4}-\d{4}$/.test(name)) {
+    msgEl.innerHTML = '<div class="modal-message error">Usa el formato YYYY-YYYY (ej: 2026-2027)</div>';
+    return;
+  }
+  if (/[\/\\.~]/.test(name)) {
+    msgEl.innerHTML = '<div class="modal-message error">El nombre contiene caracteres no permitidos</div>';
+    return;
+  }
   try {
     const doc = await db.collection('planes').doc(name).get();
     if (doc.exists) {
@@ -1444,37 +2231,23 @@ function openEditLinea(linea, isNew) {
   state.isNewLinea = isNew;
   state.editingLinea = null;
   document.getElementById('editModalMessage').innerHTML = '';
+  const extraFields = document.getElementById('editModalExtraFields');
 
   if (isNew) {
     document.getElementById('editModalTitle').textContent = 'Nueva Línea de Actuación';
+    extraFields.style.display = 'none';
     const ambitoData = state.planData[state.currentAmbitoId];
     const nextId = ambitoData ? Math.max(0, ...ambitoData.lineas.map(l => l.id)) + 1 : 1;
     state.editingLinea = { id: nextId };
     document.getElementById('formTitulo').value = '';
     document.getElementById('formDescripcion').value = '';
-    document.getElementById('formTareasFormacion').value = '';
-    document.getElementById('formTareasIntervencion').value = '';
-    document.getElementById('formEvalObjeto').value = '';
-    document.getElementById('formEvalHerr').value = '';
-    state.formSelectedResponsables = [];
-    renderResponsablesSelector();
-    document.getElementById('newResponsableInput').value = '';
-    document.getElementById('formTemporalizacion').value = '';
     document.getElementById('formSteam4').checked = false;
   } else if (linea) {
     document.getElementById('editModalTitle').textContent = 'Editar Línea de Actuación';
+    extraFields.style.display = 'none';
     state.editingLinea = linea;
     document.getElementById('formTitulo').value = linea.titulo;
     document.getElementById('formDescripcion').value = linea.descripcion;
-    document.getElementById('formTareasFormacion').value = linea.tareasFormacion.join('\n');
-    document.getElementById('formTareasIntervencion').value = linea.tareasIntervencion.map(t => typeof t === 'string' ? t : t.texto).join('\n');
-    const evals = ensureEvaluaciones(linea);
-    document.getElementById('formEvalObjeto').value = evals.length > 0 ? evals[0].objeto : '';
-    document.getElementById('formEvalHerr').value = evals.length > 0 ? evals[0].herramientas : '';
-    state.formSelectedResponsables = [...linea.responsables];
-    renderResponsablesSelector();
-    document.getElementById('newResponsableInput').value = '';
-    document.getElementById('formTemporalizacion').value = linea.temporalizacion.join(', ');
     document.getElementById('formSteam4').checked = linea.steam4;
   }
   document.getElementById('editModal').classList.add('active');
@@ -1486,58 +2259,172 @@ function closeEditModal() {
 async function saveLinea() {
   if (!state.editingLinea) return;
   const titulo = document.getElementById('formTitulo').value.trim();
+  const descripcion = document.getElementById('formDescripcion').value.trim();
   if (!titulo) {
     document.getElementById('editModalMessage').innerHTML = '<div class="modal-message error">El título es obligatorio</div>';
+    return;
+  }
+  if (!descripcion) {
+    document.getElementById('editModalMessage').innerHTML = '<div class="modal-message error">La descripción es obligatoria</div>';
     return;
   }
 
   const ambitoData = state.planData[state.currentAmbitoId];
   if (!ambitoData) return;
 
-  const updatedLinea = {
-    id: state.editingLinea.id,
-    titulo: titulo,
-    descripcion: document.getElementById('formDescripcion').value.trim(),
-    tareasFormacion: document.getElementById('formTareasFormacion').value.split('\n').map(s => s.trim()).filter(Boolean),
-    tareasIntervencion: document.getElementById('formTareasIntervencion').value.split('\n').map(s => s.trim()).filter(Boolean).map(texto => {
-      // Preserve existing evaluacion data if the text matches
-      const existing = (state.currentLinea && state.currentLinea.tareasIntervencion) ? state.currentLinea.tareasIntervencion.find(t => (typeof t === 'string' ? t : t.texto) === texto) : null;
-      if (existing && typeof existing === 'object' && existing.evaluacion) {
-        return { texto, evaluacion: existing.evaluacion };
-      }
-      return { texto, evaluacion: { responsables: [], herramientas: '', temporalizacion: [] } };
-    }),
-    evaluacion: {
-      objeto: document.getElementById('formEvalObjeto').value.trim(),
-      herramientas: document.getElementById('formEvalHerr').value.trim()
-    },
-    evaluaciones: state.currentLinea && state.currentLinea.evaluaciones ? state.currentLinea.evaluaciones.map((ev, i) => i === 0 ? {
-      ...ev,
-      objeto: document.getElementById('formEvalObjeto').value.trim(),
-      herramientas: document.getElementById('formEvalHerr').value.trim()
-    } : ev) : undefined,
-    responsables: [...state.formSelectedResponsables],
-    temporalizacion: document.getElementById('formTemporalizacion').value.split(',').map(s => s.trim()).filter(Boolean),
-    steam4: document.getElementById('formSteam4').checked
-  };
-
   if (state.isNewLinea && ambitoData.lineas.length >= 5) {
     document.getElementById('editModalMessage').innerHTML = '<div class="modal-message error">No se pueden añadir más de 5 líneas por ámbito</div>';
     return;
   }
 
-  let newLineas;
+  const steam4 = document.getElementById('formSteam4').checked;
+
   if (state.isNewLinea) {
-    newLineas = [...ambitoData.lineas, updatedLinea].sort((a, b) => a.id - b.id);
+    // New line: only basic fields, empty tasks
+    const newLinea = {
+      id: state.editingLinea.id,
+      titulo: titulo,
+      descripcion: descripcion,
+      tareasFormacion: [],
+      tareasIntervencion: [],
+      evaluacion: { objeto: '', herramientas: '' },
+      responsables: [],
+      temporalizacion: [],
+      steam4: steam4
+    };
+    const newLineas = [...ambitoData.lineas, newLinea].sort((a, b) => a.id - b.id);
+    try {
+      await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(state.currentAmbitoId).update({ lineas: newLineas });
+      closeEditModal();
+      // Navigate to the new line's detail view
+      const freshSnap = await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(state.currentAmbitoId).get();
+      const freshData = freshSnap.data();
+      if (freshData) {
+        state.planData[state.currentAmbitoId] = freshData;
+        const createdLinea = freshData.lineas.find(l => l.id === newLinea.id);
+        if (createdLinea) {
+          goLineaDetalle(createdLinea);
+        }
+      }
+    } catch (err) {
+      document.getElementById('editModalMessage').innerHTML = '<div class="modal-message error">Error al guardar la línea</div>';
+    }
   } else {
-    newLineas = ambitoData.lineas.map(l => l.id === updatedLinea.id ? updatedLinea : l);
+    // Editing existing line: only update título, descripción, steam4 — preserve existing tasks
+    const newLineas = ambitoData.lineas.map(l => {
+      if (l.id === state.editingLinea.id) {
+        return { ...l, titulo: titulo, descripcion: descripcion, steam4: steam4 };
+      }
+      return l;
+    });
+    try {
+      await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(state.currentAmbitoId).update({ lineas: newLineas });
+      // Update local state
+      if (state.currentLinea && state.currentLinea.id === state.editingLinea.id) {
+        state.currentLinea = { ...state.currentLinea, titulo: titulo, descripcion: descripcion, steam4: steam4 };
+      }
+      closeEditModal();
+      renderView();
+    } catch (err) {
+      document.getElementById('editModalMessage').innerHTML = '<div class="modal-message error">Error al guardar la línea</div>';
+    }
+  }
+}
+
+// ==================== NEW ACTUACIÓN MODAL ====================
+function openNewActuacionModal() {
+  document.getElementById('actTipoFormacion').checked = true;
+  document.getElementById('actEnunciado').value = '';
+  document.getElementById('actuacionModalMessage').innerHTML = '';
+  updateTipoStyle();
+  document.getElementById('actuacionModal').classList.add('active');
+  // Focus on enunciado textarea
+  setTimeout(() => document.getElementById('actEnunciado').focus(), 100);
+}
+
+function closeNewActuacionModal() {
+  document.getElementById('actuacionModal').classList.remove('active');
+}
+
+function updateTipoStyle() {
+  const formLabel = document.getElementById('actTipoFormLabel');
+  const intervLabel = document.getElementById('actTipoIntervLabel');
+  if (document.getElementById('actTipoFormacion').checked) {
+    formLabel.style.borderColor = 'var(--primary-color)';
+    formLabel.style.background = 'rgba(52,152,219,.08)';
+    intervLabel.style.borderColor = '#ddd';
+    intervLabel.style.background = 'transparent';
+  } else {
+    intervLabel.style.borderColor = 'var(--success-color)';
+    intervLabel.style.background = 'rgba(46,204,113,.08)';
+    formLabel.style.borderColor = '#ddd';
+    formLabel.style.background = 'transparent';
+  }
+}
+
+async function saveNewActuacion() {
+  if (!state.currentLinea) return;
+  const tipo = document.querySelector('input[name="actTipo"]:checked').value;
+  const enunciado = document.getElementById('actEnunciado').value.trim();
+
+  if (!enunciado) {
+    document.getElementById('actuacionModalMessage').innerHTML = '<div class="modal-message error">El enunciado es obligatorio</div>';
+    return;
   }
 
+  const ambitoId = state.currentAmbitoId;
+  const lineaId = state.currentLinea.id;
+  const msgEl = document.getElementById('actuacionModalMessage');
+
   try {
-    await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(state.currentAmbitoId).update({ lineas: newLineas });
-    closeEditModal();
+    // Read latest from Firestore to avoid conflicts
+    const ambitoDoc = await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(ambitoId).get();
+    const ambitoSnap = ambitoDoc.data();
+    if (!ambitoSnap || !ambitoSnap.lineas) {
+      msgEl.innerHTML = '<div class="modal-message error">Error: no se encontraron datos del ámbito</div>';
+      return;
+    }
+
+    const lineas = ambitoSnap.lineas;
+    const lineaIdx = lineas.findIndex(l => l.id === lineaId);
+    if (lineaIdx === -1) {
+      msgEl.innerHTML = '<div class="modal-message error">Error: línea no encontrada</div>';
+      return;
+    }
+
+    if (tipo === 'formacion') {
+      const newFormAct = {
+        texto: enunciado,
+        evaluacion: { responsables: [], herramientas: [], temporalizacion: [] }
+      };
+      lineas[lineaIdx].tareasFormacion = [...(lineas[lineaIdx].tareasFormacion || []), newFormAct];
+    } else {
+      const newAct = {
+        texto: enunciado,
+        evaluacion: { responsables: [], herramientas: [], temporalizacion: [] }
+      };
+      lineas[lineaIdx].tareasIntervencion = [...(lineas[lineaIdx].tareasIntervencion || []), newAct];
+    }
+
+    await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(ambitoId).update({ lineas });
+
+    // Update local state
+    state.planData[ambitoId] = ambitoSnap;
+    state.currentLinea = lineas[lineaIdx];
+
+    closeNewActuacionModal();
+    renderView();
+
+    // Show success feedback
+    const viewContainer = document.getElementById('viewContainer');
+    const fb = document.createElement('div');
+    fb.style.cssText = 'position:fixed;top:1rem;left:50%;transform:translateX(-50%);padding:.6rem 1.2rem;border-radius:8px;background:#d4edda;color:#155724;font-weight:600;font-size:.9rem;z-index:5000;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:feedbackFade 2.5s ease forwards';
+    fb.innerHTML = '<i class="fas fa-check-circle"></i> Actuación añadida correctamente';
+    viewContainer.appendChild(fb);
+    setTimeout(() => fb.remove(), 2600);
   } catch (err) {
-    document.getElementById('editModalMessage').innerHTML = '<div class="modal-message error">Error al guardar la línea</div>';
+    console.error('Error saving actuación:', err);
+    msgEl.innerHTML = '<div class="modal-message error">Error al guardar la actuación</div>';
   }
 }
 
@@ -1563,14 +2450,37 @@ async function deleteLinea() {
     await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(state.currentAmbitoId).update({ lineas: renumbered });
 
     const newEstados = { ...state.estadosTareas };
-    Object.keys(newEstados).forEach(key => {
-      const parts = key.split('-');
-      if (parts.length >= 2 && parseInt(parts[1]) === state.editingLinea.id) {
-        delete newEstados[key];
+    const newComentarios = { ...state.comentariosTareas };
+    // Delete estados for the removed line and renumber surviving lines
+    const idMapping = {};
+    ambitoData.lineas.forEach(origLinea => {
+      if (origLinea.id === state.editingLinea.id) return;
+      const newId = renumbered.find(l => l.titulo === origLinea.titulo);
+      if (newId && origLinea.id !== newId.id) {
+        idMapping[origLinea.id] = newId.id;
       }
     });
-    await db.collection('planes').doc(state.currentCourse).collection('estadosTareas').doc('global').set({ estados: newEstados });
+    Object.keys(newEstados).forEach(key => {
+      const parts = key.split('-');
+      const lineId = parts.length >= 2 ? parseInt(parts[1]) : null;
+      if (lineId === state.editingLinea.id) {
+        delete newEstados[key];
+        delete newComentarios[key];
+      } else if (idMapping[lineId]) {
+        const newKey = key.replace('-' + lineId + '-', '-' + idMapping[lineId] + '-');
+        if (newKey !== key) {
+          newEstados[newKey] = newEstados[key];
+          delete newEstados[key];
+          if (newComentarios[key] !== undefined) {
+            newComentarios[newKey] = newComentarios[key];
+            delete newComentarios[key];
+          }
+        }
+      }
+    });
+    await db.collection('planes').doc(state.currentCourse).collection('estadosTareas').doc('global').set({ estados: newEstados, comentarios: newComentarios });
     state.estadosTareas = newEstados;
+    state.comentariosTareas = newComentarios;
 
     closeDeleteModal();
     if (state.currentLinea && state.currentLinea.id === state.editingLinea.id) {
@@ -1578,6 +2488,11 @@ async function deleteLinea() {
     }
   } catch (err) {
     console.error('Error deleting linea:', err);
+    const fb = document.createElement('div');
+    fb.style.cssText = 'position:fixed;top:1rem;left:50%;transform:translateX(-50%);padding:.5rem 1rem;border-radius:8px;background:#f8d7da;color:#721c24;font-weight:600;font-size:.85rem;z-index:5000;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:feedbackFade 2s ease forwards';
+    fb.innerHTML = '<i class="fas fa-times-circle"></i> Error al eliminar la línea';
+    document.body.appendChild(fb);
+    setTimeout(() => fb.remove(), 2200);
   }
 }
 
@@ -1594,7 +2509,7 @@ function openTransferModal() {
   const targetSel = document.getElementById('transferTargetSelect');
   targetSel.innerHTML = state.courses
     .filter(c => c !== state.currentCourse)
-    .map(c => `<option value="${c}">Curso ${c}</option>`).join('');
+    .map(c => `<option value="${escapeAttr(c)}">Curso ${escapeHtml(c)}</option>`).join('');
 
   renderTransferLines();
   document.getElementById('transferModal').classList.add('active');
@@ -1714,7 +2629,11 @@ async function generarPDF() {
           const idTarea = `${ambitoId}-${linea.id}-formacion-${index}`;
           const estado = state.estadosTareas[idTarea] || 'no-iniciado';
           if (estadosSel.includes(estado)) {
-            rows.push([ambito.titulo, 'Línea ' + linea.id, tarea, 'Formación', estado, linea.responsables.join(', '), linea.temporalizacion.join(', ')]);
+            const texto = typeof tarea === 'string' ? tarea : (tarea.texto || '');
+            const ev = typeof tarea === 'object' && tarea.evaluacion ? tarea.evaluacion : {};
+            const resp = Array.isArray(ev.responsables) ? ev.responsables.join(', ') : (linea.responsables || []).join(', ');
+            const temp = Array.isArray(ev.temporalizacion) ? ev.temporalizacion.join(', ') : (linea.temporalizacion || []).join(', ');
+            rows.push([ambito.titulo, 'Línea ' + linea.id, texto, 'Formación', estado, resp, temp]);
           }
         });
       }
@@ -1725,8 +2644,8 @@ async function generarPDF() {
           if (estadosSel.includes(estado)) {
             const texto = typeof tarea === 'string' ? tarea : tarea.texto;
             const ev = typeof tarea === 'object' && tarea.evaluacion ? tarea.evaluacion : {};
-            const resp = (ev.responsables || []).join(', ') || linea.responsables.join(', ');
-            const temp = (ev.temporalizacion || []).join(', ') || linea.temporalizacion.join(', ');
+            const resp = Array.isArray(ev.responsables) ? ev.responsables.join(', ') : (linea.responsables || []).join(', ');
+            const temp = Array.isArray(ev.temporalizacion) ? ev.temporalizacion.join(', ') : (linea.temporalizacion || []).join(', ');
             rows.push([ambito.titulo, 'Línea ' + linea.id, texto, 'Actuación', estado, resp, temp]);
           }
         });
@@ -1774,6 +2693,18 @@ async function generarPDF() {
           else if (valor === 'en-proceso') data.cell.styles.textColor = [180, 130, 10];
           else if (valor === 'conseguido') data.cell.styles.textColor = [39, 174, 96];
         }
+      },
+      didDrawCell: function(data) {
+        if (data.section === 'body' && data.column.index === 4) {
+          const estadoLabelMap = { 'no-iniciado': 'No iniciada', 'en-proceso': 'En proceso', 'conseguido': 'Conseguida' };
+          const label = estadoLabelMap[data.cell.raw];
+          if (label && label !== data.cell.raw) {
+            const { x, y, width, height, styles } = data.cell;
+            const doc = data.doc;
+            doc.setFontSize(8);
+            doc.text(label, x + 3, y + height / 2 + 1, { baseline: 'middle' });
+          }
+        }
       }
     });
 
@@ -1809,7 +2740,7 @@ function renderResponsablesSelector() {
     chipsEl.innerHTML = '<span style="color:#aaa;font-size:.85rem;font-style:italic">Ninguno seleccionado — haz clic abajo para añadir</span>';
   } else {
     chipsEl.innerHTML = selected.map(r =>
-      `<button type="button" class="resp-chip selected" onclick="toggleResponsable('${escapeAttr(r)}')" title="Clic para eliminar">
+      `<button type="button" class="resp-chip selected" onclick="toggleResponsable('${jsEscape(r)}')" title="Clic para eliminar">
         ${escapeHtml(r)} <i class="fas fa-times"></i>
       </button>`
     ).join('');
@@ -1821,7 +2752,7 @@ function renderResponsablesSelector() {
   if (available.length > 0) {
     listHtml += '<span class="resp-list-label"><i class="fas fa-plus-circle"></i> Añadir responsable:</span>';
     listHtml += available.map(r =>
-      `<button type="button" class="resp-chip available" onclick="toggleResponsable('${escapeAttr(r)}')" title="Clic para añadir">
+      `<button type="button" class="resp-chip available" onclick="toggleResponsable('${jsEscape(r)}')" title="Clic para añadir">
         ${escapeHtml(r)} <i class="fas fa-check"></i>
       </button>`
     ).join('');
@@ -1857,6 +2788,7 @@ function addNewResponsable() {
   }
   // Add to the global base list so it persists for other lines too
   RESPONSABLES_BASE.push(nombre);
+  saveGlobalCatalogoItem('responsables', nombre);
   // Select it immediately
   state.formSelectedResponsables.push(nombre);
   input.value = '';
@@ -1870,7 +2802,13 @@ function getAllResponsables() {
     ambito.lineas.forEach(linea => {
       // From linea-level responsables (backward compat)
       (linea.responsables || []).forEach(r => responsables.add(r));
-      // From per-actuación evaluaciones
+      // From per-actuación evaluaciones (formacion)
+      (linea.tareasFormacion || []).forEach(t => {
+        if (typeof t === 'object' && t.evaluacion && t.evaluacion.responsables) {
+          t.evaluacion.responsables.forEach(r => responsables.add(r));
+        }
+      });
+      // From per-actuación evaluaciones (intervencion)
       (linea.tareasIntervencion || []).forEach(t => {
         if (typeof t === 'object' && t.evaluacion && t.evaluacion.responsables) {
           t.evaluacion.responsables.forEach(r => responsables.add(r));
@@ -1904,7 +2842,89 @@ function ensureEvaluaciones(linea) {
   return linea.evaluaciones;
 }
 
-const TEMP_PREDEFINED = ['Primer trimestre', 'Segundo trimestre', 'Tercer trimestre'];
+// ==================== GLOBAL CATALOG (cross-course) ====================
+async function loadGlobalCatalogos() {
+  try {
+    const doc = await db.collection('planes').doc('_config').collection('catalogos').doc('global').get();
+    if (doc.exists) {
+      const data = doc.data();
+      // Merge global responsables with base list (deduplicated)
+      if (data.responsables && Array.isArray(data.responsables)) {
+        const merged = new Set(RESPONSABLES_BASE);
+        data.responsables.forEach(r => merged.add(r));
+        RESPONSABLES_BASE = Array.from(merged).sort();
+      }
+      // Merge global temporalizacion with predefined
+      if (data.temporalizacion && Array.isArray(data.temporalizacion)) {
+        const merged = new Set(TEMP_PREDEFINED_BASE);
+        data.temporalizacion.forEach(t => merged.add(t));
+        TEMP_PREDEFINED = Array.from(merged).sort();
+      }
+      // Load global herramientas
+      if (data.herramientas && Array.isArray(data.herramientas)) {
+        HERRAMIENTAS_BASE = data.herramientas;
+      }
+    }
+  } catch (err) {
+    console.error('Error loading global catalogos:', err);
+  }
+}
+
+async function saveGlobalCatalogoItem(type, value) {
+  if (!value || !value.trim()) return;
+  const trimmed = value.trim();
+  try {
+    const docRef = db.collection('planes').doc('_config').collection('catalogos').doc('global');
+    await db.runTransaction(async (transaction) => {
+      const doc = await transaction.get(docRef);
+      let data = doc.exists ? doc.data() : {};
+      let arr = data[type] || [];
+      if (!arr.find(v => v.toLowerCase() === trimmed.toLowerCase())) {
+        arr.push(trimmed);
+        data[type] = arr;
+        transaction.set(docRef, data, { merge: true });
+      }
+    });
+    // Also update local base arrays
+    if (type === 'responsables') {
+      if (!RESPONSABLES_BASE.find(v => v.toLowerCase() === trimmed.toLowerCase())) {
+        RESPONSABLES_BASE.push(trimmed);
+        RESPONSABLES_BASE.sort();
+      }
+    } else if (type === 'temporalizacion') {
+      if (!TEMP_PREDEFINED.find(v => v.toLowerCase() === trimmed.toLowerCase())) {
+        TEMP_PREDEFINED.push(trimmed);
+        TEMP_PREDEFINED.sort();
+      }
+    } else if (type === 'herramientas') {
+      if (!HERRAMIENTAS_BASE.find(v => v.toLowerCase() === trimmed.toLowerCase())) {
+        HERRAMIENTAS_BASE.push(trimmed);
+        HERRAMIENTAS_BASE.sort();
+      }
+    }
+  } catch (err) {
+    console.error('Error saving global catalogo item:', err);
+  }
+}
+
+async function removeGlobalCatalogoItem(type, value) {
+  if (!value) return;
+  try {
+    const docRef = db.collection('planes').doc('_config').collection('catalogos').doc('global');
+    const doc = await docRef.get();
+    let data = doc.exists ? doc.data() : {};
+    let arr = data[type] || [];
+    arr = arr.filter(v => v !== value);
+    data[type] = arr;
+    await docRef.set(data);
+    // Update local
+    if (type === 'responsables') RESPONSABLES_BASE = RESPONSABLES_BASE.filter(v => v !== value);
+    else if (type === 'temporalizacion') TEMP_PREDEFINED = TEMP_PREDEFINED.filter(v => v !== value);
+    else if (type === 'herramientas') HERRAMIENTAS_BASE = HERRAMIENTAS_BASE.filter(v => v !== value);
+  } catch (err) {
+    console.error('Error removing global catalogo item:', err);
+  }
+}
 
 function getAvailableTempOptions(currentSelected) {
   const all = new Set(TEMP_PREDEFINED);
@@ -1912,6 +2932,11 @@ function getAvailableTempOptions(currentSelected) {
   Object.values(state.planData).forEach(ambito => {
     ambito.lineas.forEach(linea => {
       (linea.temporalizacion || []).forEach(t => all.add(t));
+      (linea.tareasFormacion || []).forEach(t => {
+        if (typeof t === 'object' && t.evaluacion && t.evaluacion.temporalizacion) {
+          t.evaluacion.temporalizacion.forEach(tp => all.add(tp));
+        }
+      });
       (linea.tareasIntervencion || []).forEach(t => {
         if (typeof t === 'object' && t.evaluacion && t.evaluacion.temporalizacion) {
           t.evaluacion.temporalizacion.forEach(tp => all.add(tp));
@@ -1930,6 +2955,11 @@ function getAllInfoResponsables(currentSelected) {
   Object.values(state.planData).forEach(ambito => {
     ambito.lineas.forEach(linea => {
       (linea.responsables || []).forEach(r => all.add(r));
+      (linea.tareasFormacion || []).forEach(t => {
+        if (typeof t === 'object' && t.evaluacion && t.evaluacion.responsables) {
+          t.evaluacion.responsables.forEach(r => all.add(r));
+        }
+      });
       (linea.tareasIntervencion || []).forEach(t => {
         if (typeof t === 'object' && t.evaluacion && t.evaluacion.responsables) {
           t.evaluacion.responsables.forEach(r => all.add(r));
@@ -1952,6 +2982,99 @@ function cancelEditActEval() {
   renderView();
 }
 
+// ==================== DELETE ACTUACIÓN ====================
+function confirmDeleteActuacion(taskId) {
+  state.confirmDeleteTask = taskId;
+  renderView();
+}
+
+function cancelDeleteActuacion() {
+  state.confirmDeleteTask = null;
+  renderView();
+}
+
+async function executeDeleteActuacion(taskId) {
+  if (!state.currentLinea) return;
+  const ambitoId = state.currentAmbitoId;
+  const lineaId = state.currentLinea.id;
+  state.confirmDeleteTask = null;
+
+  // Parse taskId: ambitoId-lineaId-TIPO-idx
+  let taskType = 'intervencion';
+  let idx = -1;
+  if (taskId.includes('-formacion-')) {
+    const parts = taskId.split('-formacion-');
+    idx = parseInt(parts[parts.length - 1]);
+    taskType = 'formacion';
+  } else if (taskId.includes('-intervencion-')) {
+    const parts = taskId.split('-intervencion-');
+    idx = parseInt(parts[parts.length - 1]);
+    taskType = 'intervencion';
+  }
+  if (idx < 0) return;
+
+  try {
+    const ambitoDoc = await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(ambitoId).get();
+    const ambitoSnap = ambitoDoc.data();
+    if (!ambitoSnap || !ambitoSnap.lineas) return;
+    const lineas = ambitoSnap.lineas;
+    const lineaIdx = lineas.findIndex(l => l.id === lineaId);
+    if (lineaIdx === -1) return;
+
+    const fieldKey = taskType === 'formacion' ? 'tareasFormacion' : 'tareasIntervencion';
+    lineas[lineaIdx][fieldKey].splice(idx, 1);
+
+    await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(ambitoId).update({ lineas });
+
+    // Clean up estadosTareas for this specific task and renumber remaining
+    const newEstados = { ...state.estadosTareas };
+    const newComentarios = { ...state.comentariosTareas };
+    Object.keys(newEstados).forEach(key => {
+      if (key === taskId) {
+        delete newEstados[key];
+        delete newComentarios[key];
+      } else if (key.startsWith(ambitoId + '-' + lineaId + '-' + taskType + '-')) {
+        const parts = key.split('-' + taskType + '-');
+        const oldIdx = parseInt(parts[parts.length - 1]);
+        if (oldIdx > idx) {
+          const newIdx = oldIdx - 1;
+          const newKey = ambitoId + '-' + lineaId + '-' + taskType + '-' + newIdx;
+          newEstados[newKey] = newEstados[key];
+          delete newEstados[key];
+          if (newComentarios[key] !== undefined) {
+            newComentarios[newKey] = newComentarios[key];
+            delete newComentarios[key];
+          }
+        }
+      }
+    });
+    await db.collection('planes').doc(state.currentCourse).collection('estadosTareas').doc('global').set({ estados: newEstados, comentarios: newComentarios });
+    state.estadosTareas = newEstados;
+    state.comentariosTareas = newComentarios;
+
+    // Update local state
+    state.planData[ambitoId] = ambitoSnap;
+    state.currentLinea = lineas[lineaIdx];
+    renderView();
+
+    // Show success feedback
+    const viewContainer = document.getElementById('viewContainer');
+    const fb = document.createElement('div');
+    fb.style.cssText = 'position:fixed;top:1rem;left:50%;transform:translateX(-50%);padding:.6rem 1.2rem;border-radius:8px;background:#d4edda;color:#155724;font-weight:600;font-size:.9rem;z-index:5000;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:feedbackFade 2.5s ease forwards';
+    fb.innerHTML = '<i class="fas fa-check-circle"></i> Actuación eliminada';
+    viewContainer.appendChild(fb);
+    setTimeout(() => fb.remove(), 2600);
+  } catch (err) {
+    console.error('Error deleting actuación:', err);
+    const viewContainer = document.getElementById('viewContainer');
+    const fb = document.createElement('div');
+    fb.style.cssText = 'position:fixed;top:1rem;left:50%;transform:translateX(-50%);padding:.6rem 1.2rem;border-radius:8px;background:#f8d7da;color:#721c24;font-weight:600;font-size:.9rem;z-index:5000;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:feedbackFade 2.5s ease forwards';
+    fb.innerHTML = '<i class="fas fa-times-circle"></i> Error al eliminar';
+    viewContainer.appendChild(fb);
+    setTimeout(() => fb.remove(), 2600);
+  }
+}
+
 async function saveActEval(taskId) {
   if (!state.currentLinea) return;
   const ambitoId = state.currentAmbitoId;
@@ -1959,16 +3082,23 @@ async function saveActEval(taskId) {
   if (!ambitoData) return;
   const lineaId = state.currentLinea.id;
 
-  // Parse taskId: ambitoId-lineaId-intervencion-idx
-  const parts = taskId.split('-intervencion-');
-  const idx = parseInt(parts[parts.length - 1]);
-
-  // Get the Herramientas input value
-  const herrInput = document.getElementById('actHerrInput-' + taskId);
-  const herramientas = herrInput ? herrInput.value.trim() : '';
+  // Parse taskId: ambitoId-lineaId-TIPO-idx (TIPO = "formacion" or "intervencion")
+  let taskType = 'intervencion';
+  let idx = -1;
+  if (taskId.includes('-formacion-')) {
+    const parts = taskId.split('-formacion-');
+    idx = parseInt(parts[parts.length - 1]);
+    taskType = 'formacion';
+  } else if (taskId.includes('-intervencion-')) {
+    const parts = taskId.split('-intervencion-');
+    idx = parseInt(parts[parts.length - 1]);
+    taskType = 'intervencion';
+  }
+  if (idx < 0) return;
 
   // Read chips
   const responsables = readChipsFromContainer('actRespChips-' + taskId);
+  const herramientas = readChipsFromContainer('actHerrChips-' + taskId);
   const temporalizacion = readChipsFromContainer('actTempChips-' + taskId);
 
   // Save to Firestore
@@ -1980,9 +3110,10 @@ async function saveActEval(taskId) {
     const lineaIdx = lineas.findIndex(l => l.id === lineaId);
     if (lineaIdx === -1) return;
 
-    const rawTarea = lineas[lineaIdx].tareasIntervencion[idx];
+    const fieldKey = taskType === 'formacion' ? 'tareasFormacion' : 'tareasIntervencion';
+    const rawTarea = lineas[lineaIdx][fieldKey][idx];
     const texto = typeof rawTarea === 'string' ? rawTarea : (rawTarea.texto || '');
-    lineas[lineaIdx].tareasIntervencion[idx] = {
+    lineas[lineaIdx][fieldKey][idx] = {
       texto: texto,
       evaluacion: { responsables, herramientas, temporalizacion }
     };
@@ -1991,8 +3122,9 @@ async function saveActEval(taskId) {
     state.editingActEval = null;
 
     // Update local state
-    if (state.currentLinea && state.currentLinea.tareasIntervencion[idx]) {
-      state.currentLinea.tareasIntervencion[idx] = lineas[lineaIdx].tareasIntervencion[idx];
+    state.planData[ambitoId] = ambitoSnap;
+    if (state.currentLinea && state.currentLinea.id === lineaId) {
+      state.currentLinea = lineas[lineaIdx];
     }
     renderView();
 
@@ -2006,7 +3138,7 @@ async function saveActEval(taskId) {
       setTimeout(() => fb.remove(), 2200);
     }
   } catch (err) {
-    console.error('Error saving actuación evaluación:', err);
+    console.error('Error saving evaluación:', err);
     const blockEl = document.getElementById('actEvalBlock-' + taskId.replace(/'/g, "\\'"));
     if (blockEl) {
       const fb = document.createElement('div');
@@ -2043,6 +3175,8 @@ function attachChipRemoveHandlers() {
         refreshActRespDropdown(containerId.replace('actRespChips-', ''));
       } else if (containerId.includes('Temp')) {
         refreshActTempDropdown(containerId.replace('actTempChips-', ''));
+      } else if (containerId.includes('Herr')) {
+        refreshActHerrDropdown(containerId.replace('actHerrChips-', ''));
       }
     });
   });
@@ -2096,6 +3230,7 @@ function addActRespNew(taskId) {
   if (!RESPONSABLES_BASE.find(r => r.toLowerCase() === nombre.toLowerCase())) {
     RESPONSABLES_BASE.push(nombre);
   }
+  saveGlobalCatalogoItem('responsables', nombre);
   input.value = '';
   refreshActRespDropdown(taskId);
 }
@@ -2145,8 +3280,291 @@ function addActTempNew(taskId) {
     refreshActTempDropdown(taskId);
   });
   chipsEl.appendChild(chip);
+  saveGlobalCatalogoItem('temporalizacion', nombre);
   input.value = '';
   refreshActTempDropdown(taskId);
+}
+
+// ==================== HERRAMIENTAS CHIP FUNCTIONS (per actuación) ====================
+function getAvailableHerrOptions(currentSelected) {
+  const all = new Set();
+  // Include global HERRAMIENTAS_BASE (cross-course)
+  HERRAMIENTAS_BASE.forEach(h => all.add(h));
+  // Collect all herramientas from existing tasks across the plan
+  Object.values(state.planData).forEach(ambito => {
+    ambito.lineas.forEach(linea => {
+      // From linea-level evaluacion (legacy)
+      const lineHerr = (linea.evaluacion && linea.evaluacion.herramientas) || '';
+      if (typeof lineHerr === 'string' && lineHerr) {
+        lineHerr.split(',').map(s => s.trim()).filter(Boolean).forEach(h => all.add(h));
+      } else if (Array.isArray(lineHerr)) {
+        lineHerr.forEach(h => all.add(h));
+      }
+      // From linea.evaluaciones
+      (linea.evaluaciones || []).forEach(ev => {
+        const eHerr = ev.herramientas || '';
+        if (typeof eHerr === 'string' && eHerr) {
+          eHerr.split(',').map(s => s.trim()).filter(Boolean).forEach(h => all.add(h));
+        } else if (Array.isArray(eHerr)) {
+          eHerr.forEach(h => all.add(h));
+        }
+      });
+      // From per-actuación evaluaciones (formacion)
+      (linea.tareasFormacion || []).forEach(t => {
+        if (typeof t === 'object' && t.evaluacion && t.evaluacion.herramientas) {
+          const h = t.evaluacion.herramientas;
+          if (typeof h === 'string' && h) {
+            h.split(',').map(s => s.trim()).filter(Boolean).forEach(x => all.add(x));
+          } else if (Array.isArray(h)) {
+            h.forEach(x => all.add(x));
+          }
+        }
+      });
+      // From per-actuación evaluaciones (intervencion)
+      (linea.tareasIntervencion || []).forEach(t => {
+        if (typeof t === 'object' && t.evaluacion && t.evaluacion.herramientas) {
+          const h = t.evaluacion.herramientas;
+          if (typeof h === 'string' && h) {
+            h.split(',').map(s => s.trim()).filter(Boolean).forEach(x => all.add(x));
+          } else if (Array.isArray(h)) {
+            h.forEach(x => all.add(x));
+          }
+        }
+      });
+    });
+  });
+  (currentSelected || []).forEach(h => all.delete(h));
+  return Array.from(all).sort();
+}
+
+function refreshActHerrDropdown(taskId) {
+  const sel = document.getElementById('actHerrSelect-' + taskId);
+  if (!sel) return;
+  const selected = readChipsFromContainer('actHerrChips-' + taskId);
+  const available = getAvailableHerrOptions(selected);
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">-- Seleccionar --</option>' +
+    available.map(h => '<option value="' + escapeAttr(h) + '"' + (h === cur ? ' selected' : '') + '>' + escapeHtml(h) + '</option>').join('');
+}
+
+function addActHerrFromSelect(taskId) {
+  const sel = document.getElementById('actHerrSelect-' + taskId);
+  const chipsEl = document.getElementById('actHerrChips-' + taskId);
+  if (!sel || !chipsEl || !sel.value) return;
+  const nombre = sel.value;
+  const selected = readChipsFromContainer('actHerrChips-' + taskId);
+  if (selected.includes(nombre)) return;
+  const chip = document.createElement('span');
+  chip.className = 'info-chip';
+  chip.style.cssText = 'background:rgba(243,156,18,.15);color:#e67e22';
+  chip.innerHTML = escapeHtml(nombre) + '<i class="fas fa-times"></i>';
+  chip.querySelector('i').addEventListener('click', function() {
+    chip.remove();
+    refreshActHerrDropdown(taskId);
+  });
+  chipsEl.appendChild(chip);
+  refreshActHerrDropdown(taskId);
+}
+
+function addActHerrNew(taskId) {
+  const input = document.getElementById('actHerrNewInput-' + taskId);
+  const chipsEl = document.getElementById('actHerrChips-' + taskId);
+  if (!input || !chipsEl) return;
+  const nombre = input.value.trim();
+  if (!nombre) return;
+  const selected = readChipsFromContainer('actHerrChips-' + taskId);
+  if (selected.find(s => s.toLowerCase() === nombre.toLowerCase())) { input.value = ''; return; }
+  const chip = document.createElement('span');
+  chip.className = 'info-chip';
+  chip.style.cssText = 'background:rgba(243,156,18,.15);color:#e67e22';
+  chip.innerHTML = escapeHtml(nombre) + '<i class="fas fa-times"></i>';
+  chip.querySelector('i').addEventListener('click', function() {
+    chip.remove();
+    refreshActHerrDropdown(taskId);
+  });
+  chipsEl.appendChild(chip);
+  saveGlobalCatalogoItem('herramientas', nombre);
+  input.value = '';
+  refreshActHerrDropdown(taskId);
+}
+
+// ==================== INLINE CHIP EDIT/DELETE (view mode) ====================
+function getFieldMapping(fieldType) {
+  if (fieldType === 'responsable') return { containerSuffix: 'actViewResp', dataKey: 'responsables', chipClass: 'resp', inputClass: '' };
+  if (fieldType === 'herramienta') return { containerSuffix: 'actViewHerr', dataKey: 'herramientas', chipClass: 'herr', inputClass: ' herr-input' };
+  return { containerSuffix: 'actViewTemp', dataKey: 'temporalizacion', chipClass: 'temp', inputClass: ' temp-input' };
+}
+
+function startEditEvalChip(taskId, fieldType, oldValue) {
+  const mapping = getFieldMapping(fieldType);
+  const container = document.getElementById(mapping.containerSuffix + '-' + taskId);
+  if (!container) return;
+  // Find the chip with matching data-value
+  const chips = container.querySelectorAll('.eval-chip');
+  chips.forEach(chip => {
+    if (chip.dataset.value === oldValue) {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'eval-chip-input' + mapping.inputClass;
+      input.value = oldValue;
+      input.dataset.oldValue = oldValue;
+      // Build actions
+      const actionsDiv = document.createElement('span');
+      actionsDiv.className = 'eval-chip-edit-actions';
+      const saveBtn = document.createElement('button');
+      saveBtn.className = 'eval-chip-save-btn';
+      saveBtn.innerHTML = '<i class="fas fa-check"></i>';
+      saveBtn.title = 'Guardar';
+      saveBtn.onclick = function() { finishEditEvalChip(taskId, fieldType, chip, input); };
+      const cancelBtn = document.createElement('button');
+      cancelBtn.className = 'eval-chip-cancel-btn';
+      cancelBtn.innerHTML = '<i class="fas fa-times"></i>';
+      cancelBtn.title = 'Cancelar';
+      cancelBtn.onclick = function() { cancelEditEvalChip(chip, oldValue); };
+      actionsDiv.appendChild(saveBtn);
+      actionsDiv.appendChild(cancelBtn);
+      // Replace chip content
+      chip.textContent = '';
+      chip.appendChild(input);
+      chip.appendChild(actionsDiv);
+      input.focus();
+      input.select();
+      input.onkeydown = function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); finishEditEvalChip(taskId, fieldType, chip, input); }
+        if (e.key === 'Escape') { cancelEditEvalChip(chip, oldValue); }
+      };
+    }
+  });
+}
+
+function finishEditEvalChip(taskId, fieldType, chipEl, inputEl) {
+  const newValue = inputEl.value.trim();
+  const oldValue = inputEl.dataset.oldValue;
+  if (!newValue || newValue === oldValue) {
+    cancelEditEvalChip(chipEl, oldValue);
+    return;
+  }
+  // Check for duplicates
+  const mapping = getFieldMapping(fieldType);
+  const container = document.getElementById(mapping.containerSuffix + '-' + taskId);
+  if (container) {
+    const existingValues = Array.from(container.querySelectorAll('.eval-chip')).map(c => c.dataset.value).filter(v => v !== oldValue);
+    if (existingValues.find(v => v.toLowerCase() === newValue.toLowerCase())) {
+      cancelEditEvalChip(chipEl, oldValue);
+      return;
+    }
+  }
+  // Also save new value to global catalog if it's genuinely new
+  const catalogType = fieldType === 'responsable' ? 'responsables' : fieldType === 'herramienta' ? 'herramientas' : 'temporalizacion';
+  saveGlobalCatalogoItem(catalogType, newValue);
+  saveEvalChipChange(taskId, fieldType, oldValue, newValue);
+}
+
+function cancelEditEvalChip(chipEl, oldValue) {
+  // Restore chip to view mode by re-rendering
+  const taskId = chipEl.closest('[id^="actViewResp-"],[id^="actViewHerr-"],[id^="actViewTemp-"]');
+  if (!taskId) return;
+  // Just re-render to restore clean state
+  renderView();
+}
+
+async function deleteEvalChip(taskId, fieldType, value) {
+  if (!confirm('¿Eliminar "' + value + '"?')) return;
+  // Remove the value from the array and save
+  await saveEvalChipChange(taskId, fieldType, value, null);
+}
+
+async function saveEvalChipChange(taskId, fieldType, oldValue, newValue) {
+  if (!state.currentLinea) return;
+  const ambitoId = state.currentAmbitoId;
+  const ambitoData = state.planData[ambitoId];
+  if (!ambitoData) return;
+  const lineaId = state.currentLinea.id;
+
+  // Parse taskId
+  let taskType = 'intervencion';
+  let idx = -1;
+  if (taskId.includes('-formacion-')) {
+    const parts = taskId.split('-formacion-');
+    idx = parseInt(parts[parts.length - 1]);
+    taskType = 'formacion';
+  } else if (taskId.includes('-intervencion-')) {
+    const parts = taskId.split('-intervencion-');
+    idx = parseInt(parts[parts.length - 1]);
+    taskType = 'intervencion';
+  }
+  if (idx < 0) return;
+
+  const mapping = getFieldMapping(fieldType);
+
+  try {
+    const ambitoDoc = await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(ambitoId).get();
+    const ambitoSnap = ambitoDoc.data();
+    if (!ambitoSnap || !ambitoSnap.lineas) return;
+    const lineas = ambitoSnap.lineas;
+    const lineaIdx = lineas.findIndex(l => l.id === lineaId);
+    if (lineaIdx === -1) return;
+
+    const fieldKey = taskType === 'formacion' ? 'tareasFormacion' : 'tareasIntervencion';
+    const rawTarea = lineas[lineaIdx][fieldKey][idx];
+    const texto = typeof rawTarea === 'string' ? rawTarea : (rawTarea.texto || '');
+    const evalData = (typeof rawTarea === 'object' && rawTarea.evaluacion) ? rawTarea.evaluacion : { responsables: [], herramientas: [], temporalizacion: [] };
+    let arr = evalData[mapping.dataKey] || [];
+    if (Array.isArray(arr)) {
+      const pos = arr.findIndex(v => v === oldValue);
+      if (pos >= 0) {
+        if (newValue === null) {
+          // Delete
+          arr.splice(pos, 1);
+        } else {
+          // Edit
+          arr[pos] = newValue;
+        }
+      }
+    } else if (typeof arr === 'string' && arr) {
+      // Legacy: comma-separated string
+      const items = arr.split(',').map(s => s.trim()).filter(Boolean);
+      const pos = items.findIndex(v => v === oldValue);
+      if (pos >= 0) {
+        if (newValue === null) {
+          items.splice(pos, 1);
+        } else {
+          items[pos] = newValue;
+        }
+      }
+      arr = items;
+    }
+    evalData[mapping.dataKey] = arr;
+    lineas[lineaIdx][fieldKey][idx] = { texto, evaluacion: evalData };
+    await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(ambitoId).update({ lineas });
+    state.planData[ambitoId] = ambitoSnap;
+    if (state.currentLinea && state.currentLinea.id === lineaId) {
+      state.currentLinea = lineas[lineaIdx];
+    }
+    renderView();
+
+    // Show feedback
+    const viewContainer = document.getElementById('viewContainer');
+    if (viewContainer) {
+      const fb = document.createElement('div');
+      const msg = newValue === null ? 'Eliminado' : 'Actualizado';
+      fb.style.cssText = 'position:fixed;top:1rem;left:50%;transform:translateX(-50%);padding:.5rem 1rem;border-radius:8px;background:#d4edda;color:#155724;font-weight:600;font-size:.85rem;z-index:5000;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:feedbackFade 2s ease forwards';
+      fb.innerHTML = '<i class="fas fa-check-circle"></i> ' + msg;
+      viewContainer.appendChild(fb);
+      setTimeout(() => fb.remove(), 2200);
+    }
+  } catch (err) {
+    console.error('Error saving chip change:', err);
+    renderView();
+    const viewContainer = document.getElementById('viewContainer');
+    if (viewContainer) {
+      const fb = document.createElement('div');
+      fb.style.cssText = 'position:fixed;top:1rem;left:50%;transform:translateX(-50%);padding:.5rem 1rem;border-radius:8px;background:#f8d7da;color:#721c24;font-weight:600;font-size:.85rem;z-index:5000;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:feedbackFade 2s ease forwards';
+      fb.innerHTML = '<i class="fas fa-times-circle"></i> Error al guardar';
+      viewContainer.appendChild(fb);
+      setTimeout(() => fb.remove(), 2200);
+    }
+  }
 }
 
 // ==================== NAV STATE HELPERS ====================
@@ -2173,16 +3591,365 @@ function escapeHtml(text) {
 }
 
 function escapeAttr(str) {
-  return str.replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/'/g, '&#39;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function jsEscape(str) {
+  if (str === null || str === undefined) return '';
+  return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/\r/g, '\\r');
+}
+
+// ==================== USERS MANAGEMENT ====================
+let _pendingUserAction = null;
+
+function openUsersModal() {
+  if (!isAdmin()) return;
+  document.getElementById('usersModal').classList.add('active');
+  document.getElementById('usersModalMsg').innerHTML = '';
+  document.getElementById('usersModalConfirm').innerHTML = '';
+  document.getElementById('createUserForm').style.display = 'none';
+  var toggleBtn = document.getElementById('toggleCreateBtn');
+  if (toggleBtn) toggleBtn.innerHTML = '<i class="fas fa-chevron-down"></i> Crear';
+  document.getElementById('newUserName').value = '';
+  document.getElementById('newUserUsername').value = '';
+  document.getElementById('newUserPass').value = '';
+  document.getElementById('newUserRole').value = 'viewer';
+  loadUsersList();
+}
+
+function closeUsersModal() {
+  document.getElementById('usersModal').classList.remove('active');
+  _pendingUserAction = null;
+}
+
+function toggleCreateUserForm() {
+  var form = document.getElementById('createUserForm');
+  var btn = document.getElementById('toggleCreateBtn');
+  if (!form || !btn) return;
+  var isVisible = form.style.display !== 'none';
+  form.style.display = isVisible ? 'none' : 'block';
+  btn.innerHTML = isVisible
+    ? '<i class="fas fa-chevron-down"></i> Crear'
+    : '<i class="fas fa-chevron-up"></i> Ocultar';
+  if (!isVisible) {
+    document.getElementById('newUserName').value = '';
+    document.getElementById('newUserUsername').value = '';
+    document.getElementById('newUserPass').value = '';
+    document.getElementById('newUserRole').value = 'viewer';
+    document.getElementById('usersModalMsg').innerHTML = '';
+    setTimeout(function() { document.getElementById('newUserName').focus(); }, 100);
+  }
+}
+
+async function handleCreateUser() {
+  var name = document.getElementById('newUserName').value.trim();
+  var username = document.getElementById('newUserUsername').value.trim();
+  var pass = document.getElementById('newUserPass').value;
+  var role = document.getElementById('newUserRole').value;
+  var msgEl = document.getElementById('usersModalMsg');
+
+  if (!name) { msgEl.innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#f8d7da;color:#721c24;font-size:.85rem"><i class="fas fa-times"></i> Introduce el nombre completo.</div>'; return; }
+  if (!username) { msgEl.innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#f8d7da;color:#721c24;font-size:.85rem"><i class="fas fa-times"></i> Introduce un nombre de usuario.</div>'; return; }
+  if (username.length < 3) { msgEl.innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#f8d7da;color:#721c24;font-size:.85rem"><i class="fas fa-times"></i> El usuario debe tener al menos 3 caracteres.</div>'; return; }
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) { msgEl.innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#f8d7da;color:#721c24;font-size:.85rem"><i class="fas fa-times"></i> Solo letras, números y guiones bajos.</div>'; return; }
+  if (pass.length < 6) { msgEl.innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#f8d7da;color:#721c24;font-size:.85rem"><i class="fas fa-times"></i> La contraseña debe tener al menos 6 caracteres.</div>'; return; }
+
+  var usernameKey = username.toLowerCase().trim();
+  if (getUserDoc(usernameKey)) {
+    msgEl.innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#fff3cd;color:#856404;font-size:.85rem;border:1px solid #ffeeba"><i class="fas fa-exclamation-triangle"></i> El usuario <strong>@' + usernameKey + '</strong> ya existe. Elige otro.</div>';
+    return;
+  }
+
+  var hashedPass = await hashPassword(pass);
+  setUserDoc(usernameKey, {
+    name: name,
+    username: usernameKey,
+    passwordHash: hashedPass,
+    role: role,
+    createdAt: Date.now()
+  });
+
+  document.getElementById('newUserName').value = '';
+  document.getElementById('newUserUsername').value = '';
+  document.getElementById('newUserPass').value = '';
+  document.getElementById('newUserRole').value = 'viewer';
+  document.getElementById('createUserForm').style.display = 'none';
+  var toggleBtn = document.getElementById('toggleCreateBtn');
+  if (toggleBtn) toggleBtn.innerHTML = '<i class="fas fa-chevron-down"></i> Crear';
+
+  var roleText = role === 'admin' ? 'Admin' : 'Usuario';
+  msgEl.innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#d4edda;color:#155724;font-size:.85rem"><i class="fas fa-check"></i> Usuario <strong>' + escapeHtml(name) + '</strong> creado como <strong>' + roleText + '</strong>.</div>';
+  loadUsersList();
+}
+
+function loadUsersList() {
+  const container = document.getElementById('usersModalList');
+  if (!container) return;
+  const allUsers = getAllUsersSorted();
+  if (allUsers.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:1.5rem;color:#888">No hay usuarios registrados.</div>';
+    return;
+  }
+  const currentUid = state.user ? state.user.uid : null;
+  let html = '<div class="user-mgmt-count"><i class="fas fa-users"></i> ' + allUsers.length + ' usuario' + (allUsers.length !== 1 ? 's' : '') + ' registrado' + (allUsers.length !== 1 ? 's' : '') + '</div>';
+  html += '<ul class="user-mgmt-list">';
+  allUsers.forEach(function(data) {
+    var uid = data.uid;
+    var isCurrentUser = uid === currentUid;
+    var roleClass = data.role === 'admin' ? 'admin' : 'viewer';
+    var roleLabel = data.role === 'admin' ? '<i class="fas fa-crown"></i> Admin' : '<i class="fas fa-eye"></i> Usuario';
+    var created = data.createdAt ? new Date(data.createdAt).toLocaleDateString('es-ES') : '';
+
+    html += '<li class="user-mgmt-item ' + (isCurrentUser ? 'current-user' : '') + '">';
+    html += '<div class="user-mgmt-info">';
+    html += '<div class="user-mgmt-name">';
+    html += escapeHtml(data.name || 'Sin nombre');
+    if (isCurrentUser) html += ' <span class="you-tag">T\u00fa</span>';
+    html += ' <span class="auth-role-badge ' + roleClass + '" style="font-size:.65rem;padding:.15rem .5rem">' + roleLabel + '</span>';
+    html += '</div>';
+    html += '<div class="user-mgmt-username">@' + escapeHtml(data.username) + (created ? ' \u00b7 Registrado: ' + created : '') + '</div>';
+    html += '</div>';
+    html += '<div class="user-mgmt-actions">';
+
+    if (!isCurrentUser) {
+      if (data.role !== 'admin') {
+        html += '<button class="user-mgmt-btn promote" onclick="confirmToggleRole(\'' + jsEscape(uid) + '\',\'' + jsEscape(data.username) + '\',\'admin\')" title="Promover a Admin"><i class="fas fa-crown"></i> Hacer Admin</button>';
+
+      } else {
+        html += '<button class="user-mgmt-btn demote" onclick="confirmToggleRole(\'' + jsEscape(uid) + '\',\'' + jsEscape(data.username) + '\',\'viewer\')" title="Cambiar a Usuario"><i class="fas fa-eye"></i> Hacer Usuario</button>';
+      }
+      html += '<button class="user-mgmt-btn delete" onclick="confirmDeleteUser(\'' + jsEscape(uid) + '\',\'' + jsEscape(data.name || data.username) + '\')" title="Eliminar usuario"><i class="fas fa-trash"></i></button>';
+    } else {
+      html += '<span style="font-size:.75rem;color:#aaa;font-style:italic">Tu cuenta</span>';
+    }
+    html += '</div></li>';
+  });
+  html += '</ul>';
+  container.innerHTML = html;
+}
+
+function confirmToggleRole(uid, username, newRole) {
+  const confirmDiv = document.getElementById('usersModalConfirm');
+  const msgDiv = document.getElementById('usersModalMsg');
+  if (!confirmDiv) return;
+  const roleText = newRole === 'admin' ? 'Admin (control total)' : 'Usuario (solo lectura)';
+  const btnClass = newRole === 'admin' ? 'promote' : 'demote';
+  const btnText = newRole === 'admin' ? '<i class="fas fa-crown"></i> Confirmar' : '<i class="fas fa-eye"></i> Confirmar';
+  confirmDiv.innerHTML = `
+    <div class="user-mgmt-confirm">
+      <span><i class="fas fa-exclamation-triangle"></i> ¿Cambiar <strong>@${escapeHtml(username)}</strong> a <strong>${roleText}</strong>?</span>
+      <div style="display:flex;gap:.4rem">
+        <button style="background:#95a5a6;color:#fff" onclick="cancelUserAction()">Cancelar</button>
+        <button class="user-mgmt-btn ${btnClass}" onclick="executeToggleRole('${uid}','${newRole}')">${btnText}</button>
+      </div>
+    </div>`;
+  msgDiv.innerHTML = '';
+}
+
+function executeToggleRole(uid, newRole) {
+  const userData = getUserDoc(uid);
+  if (!userData) {
+    document.getElementById('usersModalMsg').innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#f8d7da;color:#721c24;font-size:.85rem"><i class="fas fa-times"></i> Usuario no encontrado.</div>';
+    return;
+  }
+  userData.role = newRole;
+  setUserDoc(uid, userData);
+  if (state.user && state.user.uid === uid) {
+    state.userRole = newRole;
+    state.user.role = newRole;
+    sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(state.user));
+    applyRoleUI();
+    renderView();
+  }
+  document.getElementById('usersModalConfirm').innerHTML = '';
+  document.getElementById('usersModalMsg').innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#d4edda;color:#155724;font-size:.85rem"><i class="fas fa-check"></i> Rol actualizado correctamente.</div>';
+  loadUsersList();
+}
+
+function confirmDeleteUser(uid, displayName) {
+  const confirmDiv = document.getElementById('usersModalConfirm');
+  if (!confirmDiv) return;
+  confirmDiv.innerHTML = `
+    <div class="user-mgmt-confirm" style="background:#f8d7da;color:#721c24">
+      <span><i class="fas fa-exclamation-triangle"></i> ¿Eliminar a <strong>${escapeHtml(displayName)}</strong>? Esta acción no se puede deshacer.</span>
+      <div style="display:flex;gap:.4rem">
+        <button style="background:#95a5a6;color:#fff" onclick="cancelUserAction()">Cancelar</button>
+        <button class="user-mgmt-btn delete" onclick="executeDeleteUser('${uid}')"><i class="fas fa-trash"></i> Eliminar</button>
+      </div>
+    </div>`;
+  document.getElementById('usersModalMsg').innerHTML = '';
+}
+
+function executeDeleteUser(uid) {
+  removeUserDoc(uid);
+  document.getElementById('usersModalConfirm').innerHTML = '';
+  document.getElementById('usersModalMsg').innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#d4edda;color:#155724;font-size:.85rem"><i class="fas fa-check"></i> Usuario eliminado correctamente.</div>';
+  loadUsersList();
+}
+
+function cancelUserAction() {
+  document.getElementById('usersModalConfirm').innerHTML = '';
+}
+
+// ==================== TOAST ====================
+function showToast(message, type) {
+  const colors = { success: '#d4edda', error: '#f8d7da', info: '#d1ecf1' };
+  const textColors = { success: '#155724', error: '#721c24', info: '#0c5460' };
+  const bg = colors[type] || colors.info;
+  const fg = textColors[type] || textColors.info;
+  const fb = document.createElement('div');
+  fb.style.cssText = 'position:fixed;top:1rem;left:50%;transform:translateX(-50%);padding:.6rem 1.2rem;border-radius:8px;background:' + bg + ';color:' + fg + ';font-weight:600;font-size:.9rem;z-index:10000;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:feedbackFade 2.5s ease forwards;white-space:nowrap;max-width:90vw;overflow:hidden;text-overflow:ellipsis';
+  fb.textContent = message;
+  document.body.appendChild(fb);
+  setTimeout(() => { if (fb.parentNode) fb.parentNode.removeChild(fb); }, 3000);
+}
+
+// ==================== EXPORT / IMPORT JSON ====================
+async function exportJSON() {
+  try {
+    showToast('Preparando exportación...', 'info');
+    const exportData = {
+      _meta: { exportDate: new Date().toISOString(), appVersion: 'STEAM 4.0' },
+      cursos: {},
+      catalogos: null
+    };
+
+    // Export all courses
+    const coursesSnap = await db.collection('planes').get();
+    const batchPromises = [];
+    coursesSnap.forEach(courseDoc => {
+      const courseId = courseDoc.id;
+      if (courseId === '_config') return; // skip config
+      const p = (async () => {
+        const ambitosSnap = await db.collection('planes').doc(courseId).collection('ambitos').get();
+        const ambitos = {};
+        ambitosSnap.forEach(a => { ambitos[a.id] = a.data(); });
+
+        let estados = {};
+        let comentarios = {};
+        try {
+          const estDoc = await db.collection('planes').doc(courseId).collection('estadosTareas').doc('global').get();
+          if (estDoc.exists) {
+            estados = estDoc.data().estados || {};
+            comentarios = estDoc.data().comentarios || {};
+          }
+        } catch(e) {}
+
+        exportData.cursos[courseId] = { ambitos, estados, comentarios };
+      })();
+      batchPromises.push(p);
+    });
+    await Promise.all(batchPromises);
+
+    // Export global catalogs
+    try {
+      const catDoc = await db.collection('planes').doc('_config').collection('catalogos').doc('global').get();
+      if (catDoc.exists) exportData.catalogos = catDoc.data();
+    } catch(e) {}
+
+    // Download file
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'plan-digital-backup-' + new Date().toISOString().split('T')[0] + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Exportación completada', 'success');
+  } catch (err) {
+    console.error('Error exporting JSON:', err);
+    showToast('Error al exportar: ' + err.message, 'error');
+  }
+}
+
+function triggerImportJSON() {
+  document.getElementById('importJsonFile').click();
+}
+
+async function handleImportJSON(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  // Reset input so same file can be re-selected
+  event.target.value = '';
+
+  // Confirm action
+  if (!confirm('¿Importar datos desde el archivo JSON?\n\nLos datos existentes de los cursos que aparezcan en el archivo serán sobrescritos. Los cursos que no aparezcan no se modificarán.')) return;
+
+  try {
+    showToast('Importando datos...', 'info');
+    const text = await file.text();
+    const data = JSON.parse(text);
+
+    if (!data.cursos || typeof data.cursos !== 'object') {
+      showToast('Archivo JSON no válido: falta la sección "cursos"', 'error');
+      return;
+    }
+
+    let coursesImported = 0;
+    const courseIds = Object.keys(data.cursos);
+
+    for (const courseId of courseIds) {
+      const courseData = data.cursos[courseId];
+      // Create course doc if not exists
+      await db.collection('planes').doc(courseId).set({ name: courseId }, { merge: true });
+
+      // Import ambitos
+      if (courseData.ambitos && typeof courseData.ambitos === 'object') {
+        for (const [ambitoId, ambitoData] of Object.entries(courseData.ambitos)) {
+          await db.collection('planes').doc(courseId).collection('ambitos').doc(ambitoId).set(ambitoData);
+        }
+      }
+
+      // Import estados
+      if (courseData.estados || courseData.comentarios) {
+        await db.collection('planes').doc(courseId).collection('estadosTareas').doc('global').set({
+          estados: courseData.estados || {},
+          comentarios: courseData.comentarios || {}
+        }, { merge: true });
+      }
+      coursesImported++;
+    }
+
+    // Import global catalogs
+    if (data.catalogos && typeof data.catalogos === 'object') {
+      await db.collection('planes').doc('_config').collection('catalogos').doc('global').set(data.catalogos, { merge: true });
+    }
+
+    showToast('Importación completada: ' + coursesImported + ' curso(s) importado(s)', 'success');
+
+    // Reload to pick up changes
+    state.currentCourse = '';
+    await loadCourses();
+  } catch (err) {
+    console.error('Error importing JSON:', err);
+    showToast('Error al importar: ' + err.message, 'error');
+  }
 }
 
 // ==================== INIT ====================
 (async function init() {
   document.getElementById('portalCurso').textContent = 'Cargando...';
+  // Show auth overlay initially
+  showAuthOverlay();
+  // Auth state change listener will trigger loadCourses after successful login
   await checkConnection();
-  await loadCourses();
-  document.getElementById('portalCurso').textContent = 'Curso ' + state.currentCourse;
 })();
+
+// ==================== SERVICE WORKER REGISTRATION ====================
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/PlanActDigV2/sw.js')
+      .then((reg) => {
+        console.log('Service Worker registrado. Ámbito:', reg.scope);
+        // Check for updates periodically
+        setInterval(() => reg.update(), 60 * 60 * 1000); // cada hora
+      })
+      .catch((err) => console.warn('Service Worker no registrado:', err));
+  });
+}
 </script>
 </body>
 </html>
