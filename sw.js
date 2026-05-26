@@ -1,5 +1,5 @@
 // ==================== Service Worker - Plan de Actuación Digital ====================
-const CACHE_NAME = 'plan-digital-v8';
+const CACHE_NAME = 'plan-digital-v9';
 const BASE_URL = '/PlanActDigV2/';
 
 const PRECACHE_URLS = [
