@@ -552,15 +552,15 @@ nav::-webkit-scrollbar{display:none}
     </div>
     <div class="form-group">
       <label>Título *</label>
-      <input class="form-input" type="text" id="formTitulo" placeholder="Título de la línea">
+      <input class="form-input" type="text" id="formTitulo" placeholder="Título de la línea" onblur="scheduleAutoSaveLineaField('titulo')">
     </div>
     <div class="form-group">
       <label>Descripción *</label>
-      <textarea class="form-textarea" id="formDescripcion" placeholder="Descripción de la línea"></textarea>
+      <textarea class="form-textarea" id="formDescripcion" placeholder="Descripción de la línea" onblur="scheduleAutoSaveLineaField('descripcion')"></textarea>
     </div>
     <div class="form-group">
       <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer">
-        <input type="checkbox" id="formSteam4">
+        <input type="checkbox" id="formSteam4" onchange="scheduleAutoSaveLineaField('steam4')">
         Vinculada al Proyecto STEAM 4.0
       </label>
     </div>
@@ -575,11 +575,11 @@ nav::-webkit-scrollbar{display:none}
       </div>
       <div class="form-group">
         <label>Objeto de Evaluación</label>
-        <input class="form-input" type="text" id="formEvalObjeto" placeholder="Objeto de evaluación">
+        <input class="form-input" type="text" id="formEvalObjeto" placeholder="Objeto de evaluación" onblur="scheduleAutoSaveLineaField('evalObjeto')">
       </div>
       <div class="form-group">
         <label>Herramientas de Evaluación</label>
-        <input class="form-input" type="text" id="formEvalHerr" placeholder="Herramientas">
+        <input class="form-input" type="text" id="formEvalHerr" placeholder="Herramientas" onblur="scheduleAutoSaveLineaField('evalHerr')">
       </div>
       <div class="form-group">
         <label>Responsables <span style="font-weight:400;font-size:.8rem;color:#999">(haz clic para añadir/eliminar)</span></label>
@@ -592,7 +592,7 @@ nav::-webkit-scrollbar{display:none}
       </div>
       <div class="form-group">
         <label>Temporalización (separados por coma)</label>
-        <input class="form-input" type="text" id="formTemporalizacion" placeholder="Primer trimestre, Segundo trimestre">
+        <input class="form-input" type="text" id="formTemporalizacion" placeholder="Primer trimestre, Segundo trimestre" onblur="scheduleAutoSaveLineaField('temporalizacion')">
       </div>
     </div>
     <div id="editModalMessage"></div>
@@ -805,6 +805,7 @@ async function hashPassword(password) {
 }
 
 function getUsersDB() {
+  // Kept as cache helper; actual source of truth is now Firestore
   try {
     return JSON.parse(localStorage.getItem(AUTH_USERS_KEY)) || {};
   } catch { return {}; }
@@ -814,26 +815,65 @@ function saveUsersDB(usersDB) {
   localStorage.setItem(AUTH_USERS_KEY, JSON.stringify(usersDB));
 }
 
-function getUserDoc(usernameKey) {
+// ---- Firestore-backed user operations (async) ----
+
+async function getUserDoc(usernameKey) {
+  try {
+    const doc = await db.collection('_users').doc(usernameKey).get();
+    if (doc.exists) return doc.data();
+  } catch (err) {
+    console.warn('getUserDoc Firestore error, falling back to localStorage:', err);
+  }
+  // Fallback to localStorage cache
   const usersDB = getUsersDB();
   return usersDB[usernameKey] || null;
 }
 
-function setUserDoc(usernameKey, userData) {
+async function setUserDoc(usernameKey, userData) {
+  try {
+    await db.collection('_users').doc(usernameKey).set(userData);
+  } catch (err) {
+    console.error('setUserDoc Firestore error:', err);
+  }
+  // Also update localStorage cache for offline fallback
   const usersDB = getUsersDB();
   usersDB[usernameKey] = userData;
   saveUsersDB(usersDB);
 }
 
-function removeUserDoc(usernameKey) {
+async function removeUserDoc(usernameKey) {
+  try {
+    await db.collection('_users').doc(usernameKey).delete();
+  } catch (err) {
+    console.error('removeUserDoc Firestore error:', err);
+  }
   const usersDB = getUsersDB();
   delete usersDB[usernameKey];
   saveUsersDB(usersDB);
 }
 
-function getAllUsersSorted() {
+async function getAllUsersSorted() {
+  try {
+    const snapshot = await db.collection('_users').orderBy('createdAt', 'asc').get();
+    if (!snapshot.empty) {
+      return snapshot.docs.map(d => ({ uid: d.id, ...d.data() }));
+    }
+  } catch (err) {
+    console.warn('getAllUsersSorted Firestore error, falling back to localStorage:', err);
+  }
+  // Fallback to localStorage cache
   const usersDB = getUsersDB();
   return Object.keys(usersDB).map(uid => ({ uid, ...usersDB[uid] })).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+}
+
+async function hasAnyUsers() {
+  try {
+    const snapshot = await db.collection('_users').limit(1).get();
+    return !snapshot.empty;
+  } catch (err) {
+    console.warn('hasAnyUsers Firestore error, falling back to localStorage:', err);
+  }
+  return Object.keys(getUsersDB()).length > 0;
 }
 
 // Base list of predefined responsables (mutable — new entries can be added)
@@ -927,6 +967,158 @@ const state = {
 };
 
 let unsubscribeFns = [];
+
+// ==================== AUTO-SAVE SYSTEM ====================
+let _autoSaveTimer = null;
+const AUTO_SAVE_DELAY = 800; // ms debounce
+
+function showAutoSaveFeedback(saving) {
+  let indicator = document.getElementById('autoSaveIndicator');
+  if (!indicator) {
+    indicator = document.createElement('div');
+    indicator.id = 'autoSaveIndicator';
+    indicator.style.cssText = 'position:fixed;bottom:1rem;right:1rem;z-index:8000;display:flex;align-items:center;gap:.4rem;padding:.4rem .8rem;border-radius:20px;font-size:.75rem;font-weight:600;transition:all .3s;box-shadow:0 2px 8px rgba(0,0,0,.12);pointer-events:none;opacity:0;';
+    document.body.appendChild(indicator);
+  }
+  if (saving) {
+    indicator.style.background = '#fff3cd';
+    indicator.style.color = '#856404';
+    indicator.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+    indicator.style.opacity = '1';
+  } else {
+    indicator.style.background = '#d4edda';
+    indicator.style.color = '#155724';
+    indicator.innerHTML = '<i class="fas fa-check"></i> Guardado';
+    indicator.style.opacity = '1';
+    clearTimeout(indicator._hideTimer);
+    indicator._hideTimer = setTimeout(() => { indicator.style.opacity = '0'; }, 2000);
+  }
+}
+
+/**
+ * Auto-saves the current actuacion evaluation (chips) to Firestore.
+ * Called after any chip add/remove in the act eval editing panel.
+ */
+function scheduleAutoSaveActEval(taskId) {
+  clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(() => autoSaveActEval(taskId), AUTO_SAVE_DELAY);
+}
+
+async function autoSaveActEval(taskId) {
+  if (!state.currentLinea || !state.currentCourse) return;
+  const ambitoId = state.currentAmbitoId;
+  const lineaId = state.currentLinea.id;
+
+  // Parse taskId
+  let taskType = 'intervencion';
+  let idx = -1;
+  if (taskId.includes('-formacion-')) {
+    const parts = taskId.split('-formacion-');
+    idx = parseInt(parts[parts.length - 1]);
+    taskType = 'formacion';
+  } else if (taskId.includes('-intervencion-')) {
+    const parts = taskId.split('-intervencion-');
+    idx = parseInt(parts[parts.length - 1]);
+    taskType = 'intervencion';
+  }
+  if (idx < 0) return;
+
+  // Read current chips from the DOM
+  const responsables = readChipsFromContainer('actRespChips-' + taskId);
+  const herramientas = readChipsFromContainer('actHerrChips-' + taskId);
+  const temporalizacion = readChipsFromContainer('actTempChips-' + taskId);
+
+  showAutoSaveFeedback(true);
+  try {
+    const ambitoDoc = await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(ambitoId).get();
+    const ambitoSnap = ambitoDoc.data();
+    if (!ambitoSnap || !ambitoSnap.lineas) { showAutoSaveFeedback(false); return; }
+    const lineas = ambitoSnap.lineas;
+    const lineaIdx = lineas.findIndex(l => l.id === lineaId);
+    if (lineaIdx === -1) { showAutoSaveFeedback(false); return; }
+
+    const fieldKey = taskType === 'formacion' ? 'tareasFormacion' : 'tareasIntervencion';
+    const rawTarea = lineas[lineaIdx][fieldKey][idx];
+    const texto = typeof rawTarea === 'string' ? rawTarea : (rawTarea.texto || '');
+    lineas[lineaIdx][fieldKey][idx] = {
+      texto: texto,
+      evaluacion: { responsables, herramientas, temporalizacion }
+    };
+    await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(ambitoId).update({ lineas });
+    showAutoSaveFeedback(false);
+  } catch (err) {
+    console.error('Auto-save act eval error:', err);
+    showAutoSaveFeedback(false);
+  }
+}
+
+/**
+ * Auto-saves linea field (titulo or descripcion) on blur.
+ */
+function scheduleAutoSaveLineaField(field) {
+  clearTimeout(_autoSaveTimer);
+  _autoSaveTimer = setTimeout(() => autoSaveLineaField(field), AUTO_SAVE_DELAY);
+}
+
+async function autoSaveLineaField(field) {
+  if (!state.currentLinea || !state.currentCourse) return;
+  const ambitoId = state.currentAmbitoId;
+  const lineaId = state.currentLinea.id;
+
+  let inputEl;
+  if (field === 'titulo') inputEl = document.getElementById('formTitulo');
+  else if (field === 'descripcion') inputEl = document.getElementById('formDescripcion');
+  else if (field === 'evalObjeto') inputEl = document.getElementById('formEvalObjeto');
+  else if (field === 'evalHerr') inputEl = document.getElementById('formEvalHerr');
+  else if (field === 'temporalizacion') inputEl = document.getElementById('formTemporalizacion');
+  else if (field === 'steam4') {
+    // Special case: toggle
+    const checkbox = document.getElementById('formSteam4');
+    if (!checkbox) return;
+    showAutoSaveFeedback(true);
+    try {
+      const ambitoDoc = await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(ambitoId).get();
+      const ambitoSnap = ambitoDoc.data();
+      if (!ambitoSnap || !ambitoSnap.lineas) { showAutoSaveFeedback(false); return; }
+      const lineas = ambitoSnap.lineas;
+      const lineaIdx = lineas.findIndex(l => l.id === lineaId);
+      if (lineaIdx === -1) { showAutoSaveFeedback(false); return; }
+      lineas[lineaIdx].steam4 = checkbox.checked;
+      await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(ambitoId).update({ lineas });
+      showAutoSaveFeedback(false);
+    } catch (err) {
+      console.error('Auto-save steam toggle error:', err);
+      showAutoSaveFeedback(false);
+    }
+    return;
+  } else return;
+  if (!inputEl) return;
+  const value = inputEl.value;
+
+  showAutoSaveFeedback(true);
+  try {
+    const ambitoDoc = await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(ambitoId).get();
+    const ambitoSnap = ambitoDoc.data();
+    if (!ambitoSnap || !ambitoSnap.lineas) { showAutoSaveFeedback(false); return; }
+    const lineas = ambitoSnap.lineas;
+    const lineaIdx = lineas.findIndex(l => l.id === lineaId);
+    if (lineaIdx === -1) { showAutoSaveFeedback(false); return; }
+    if (field === 'titulo') lineas[lineaIdx].titulo = value;
+    else if (field === 'descripcion') lineas[lineaIdx].descripcion = value;
+    else if (field === 'evalObjeto' || field === 'evalHerr') {
+      if (!lineas[lineaIdx].evaluacion) lineas[lineaIdx].evaluacion = {};
+      if (field === 'evalObjeto') lineas[lineaIdx].evaluacion.objeto = value;
+      else lineas[lineaIdx].evaluacion.herramientas = value;
+    } else if (field === 'temporalizacion') {
+      lineas[lineaIdx].temporalizacion = value.split(',').map(s => s.trim()).filter(Boolean);
+    }
+    await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(ambitoId).update({ lineas });
+    showAutoSaveFeedback(false);
+  } catch (err) {
+    console.error('Auto-save linea field error:', err);
+    showAutoSaveFeedback(false);
+  }
+}
 
 // ==================== FIREBASE CONNECTION ====================
 function setConnectionStatus(connected) {
@@ -1036,7 +1228,7 @@ async function handleAuth() {
       }
 
       const hashedPass = await hashPassword(pass);
-      setUserDoc(usernameKey, {
+      await setUserDoc(usernameKey, {
         name: name,
         username: usernameKey,
         passwordHash: hashedPass,
@@ -1060,7 +1252,7 @@ async function handleAuth() {
       }
     } else {
       // --- LOGIN NORMAL ---
-      const userData = getUserDoc(usernameKey);
+      const userData = await getUserDoc(usernameKey);
       if (!userData) {
         errorEl.textContent = 'Usuario o contrase\u00f1a incorrectos.';
         errorEl.style.display = 'flex';
@@ -1151,13 +1343,13 @@ function applyRoleUI() {
 async function restoreSession() {
   try {
     var raw = localStorage.getItem(AUTH_SESSION_KEY);
-    if (!raw) { checkUsersAndShowAuth(); return; }
+    if (!raw) { await checkUsersAndShowAuth(); return; }
     const session = JSON.parse(raw);
-    if (!session || !session.uid || !session.username) { checkUsersAndShowAuth(); return; }
-    const userData = getUserDoc(session.uid);
+    if (!session || !session.uid || !session.username) { await checkUsersAndShowAuth(); return; }
+    const userData = await getUserDoc(session.uid);
     if (!userData) {
       localStorage.removeItem(AUTH_SESSION_KEY);
-      checkUsersAndShowAuth();
+      await checkUsersAndShowAuth();
       return;
     }
     state.user = session;
@@ -1173,13 +1365,12 @@ async function restoreSession() {
   } catch (err) {
     console.error('Session restore error:', err);
     localStorage.removeItem(AUTH_SESSION_KEY);
-    checkUsersAndShowAuth();
+    await checkUsersAndShowAuth();
   }
 }
 
-function checkUsersAndShowAuth() {
-  const usersDB = getUsersDB();
-  const hasUsers = Object.keys(usersDB).length > 0;
+async function checkUsersAndShowAuth() {
+  const hasUsers = await hasAnyUsers();
   state.needsAdminSetup = !hasUsers;
   showAuthOverlay();
 }
@@ -1301,6 +1492,30 @@ async function listenToCourseData() {
     });
 
   unsubscribeFns = [ambitosUnsub, estadosUnsub];
+
+  // Listen to global catalogos (responsables, herramientas, temporalización)
+  const catalogosUnsub = db.collection('planes').doc('_config').collection('catalogos').doc('global')
+    .onSnapshot(doc => {
+      if (doc.exists) {
+        const data = doc.data();
+        if (data.responsables && Array.isArray(data.responsables)) {
+          const merged = new Set(RESPONSABLES_BASE);
+          data.responsables.forEach(r => merged.add(r));
+          RESPONSABLES_BASE = Array.from(merged).sort();
+        }
+        if (data.temporalizacion && Array.isArray(data.temporalizacion)) {
+          const merged = new Set(TEMP_PREDEFINED_BASE);
+          data.temporalizacion.forEach(t => merged.add(t));
+          TEMP_PREDEFINED = Array.from(merged).sort();
+        }
+        if (data.herramientas && Array.isArray(data.herramientas)) {
+          HERRAMIENTAS_BASE = data.herramientas;
+        }
+      }
+    }, err => {
+      // Silent — catalogos are not critical
+    });
+  unsubscribeFns.push(catalogosUnsub);
 }
 
 // ==================== NAVIGATION ====================
@@ -3188,13 +3403,18 @@ function attachChipRemoveHandlers() {
       const container = chip.parentElement;
       chip.remove();
       const containerId = container.id || '';
+      let taskId = '';
       if (containerId.includes('Resp')) {
-        refreshActRespDropdown(containerId.replace('actRespChips-', ''));
+        taskId = containerId.replace('actRespChips-', '');
+        refreshActRespDropdown(taskId);
       } else if (containerId.includes('Temp')) {
-        refreshActTempDropdown(containerId.replace('actTempChips-', ''));
+        taskId = containerId.replace('actTempChips-', '');
+        refreshActTempDropdown(taskId);
       } else if (containerId.includes('Herr')) {
-        refreshActHerrDropdown(containerId.replace('actHerrChips-', ''));
+        taskId = containerId.replace('actHerrChips-', '');
+        refreshActHerrDropdown(taskId);
       }
+      if (taskId) scheduleAutoSaveActEval(taskId);
     });
   });
 }
@@ -3223,9 +3443,11 @@ function addActRespFromSelect(taskId) {
   chip.querySelector('i').addEventListener('click', function() {
     chip.remove();
     refreshActRespDropdown(taskId);
+    scheduleAutoSaveActEval(taskId);
   });
   chipsEl.appendChild(chip);
   refreshActRespDropdown(taskId);
+  scheduleAutoSaveActEval(taskId);
 }
 
 function addActRespNew(taskId) {
@@ -3242,6 +3464,7 @@ function addActRespNew(taskId) {
   chip.querySelector('i').addEventListener('click', function() {
     chip.remove();
     refreshActRespDropdown(taskId);
+    scheduleAutoSaveActEval(taskId);
   });
   chipsEl.appendChild(chip);
   if (!RESPONSABLES_BASE.find(r => r.toLowerCase() === nombre.toLowerCase())) {
@@ -3249,6 +3472,7 @@ function addActRespNew(taskId) {
   }
   saveGlobalCatalogoItem('responsables', nombre);
   input.value = '';
+  scheduleAutoSaveActEval(taskId);
   refreshActRespDropdown(taskId);
 }
 
@@ -3276,9 +3500,11 @@ function addActTempFromSelect(taskId) {
   chip.querySelector('i').addEventListener('click', function() {
     chip.remove();
     refreshActTempDropdown(taskId);
+    scheduleAutoSaveActEval(taskId);
   });
   chipsEl.appendChild(chip);
   refreshActTempDropdown(taskId);
+  scheduleAutoSaveActEval(taskId);
 }
 
 function addActTempNew(taskId) {
@@ -3295,11 +3521,13 @@ function addActTempNew(taskId) {
   chip.querySelector('i').addEventListener('click', function() {
     chip.remove();
     refreshActTempDropdown(taskId);
+    scheduleAutoSaveActEval(taskId);
   });
   chipsEl.appendChild(chip);
   saveGlobalCatalogoItem('temporalizacion', nombre);
   input.value = '';
   refreshActTempDropdown(taskId);
+  scheduleAutoSaveActEval(taskId);
 }
 
 // ==================== HERRAMIENTAS CHIP FUNCTIONS (per actuación) ====================
@@ -3378,9 +3606,11 @@ function addActHerrFromSelect(taskId) {
   chip.querySelector('i').addEventListener('click', function() {
     chip.remove();
     refreshActHerrDropdown(taskId);
+    scheduleAutoSaveActEval(taskId);
   });
   chipsEl.appendChild(chip);
   refreshActHerrDropdown(taskId);
+  scheduleAutoSaveActEval(taskId);
 }
 
 function addActHerrNew(taskId) {
@@ -3398,11 +3628,13 @@ function addActHerrNew(taskId) {
   chip.querySelector('i').addEventListener('click', function() {
     chip.remove();
     refreshActHerrDropdown(taskId);
+    scheduleAutoSaveActEval(taskId);
   });
   chipsEl.appendChild(chip);
   saveGlobalCatalogoItem('herramientas', nombre);
   input.value = '';
   refreshActHerrDropdown(taskId);
+  scheduleAutoSaveActEval(taskId);
 }
 
 // ==================== INLINE CHIP EDIT/DELETE (view mode) ====================
@@ -3673,13 +3905,13 @@ async function handleCreateUser() {
   if (pass.length < 6) { msgEl.innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#f8d7da;color:#721c24;font-size:.85rem"><i class="fas fa-times"></i> La contraseña debe tener al menos 6 caracteres.</div>'; return; }
 
   var usernameKey = username.toLowerCase().trim();
-  if (getUserDoc(usernameKey)) {
+  if (await getUserDoc(usernameKey)) {
     msgEl.innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#fff3cd;color:#856404;font-size:.85rem;border:1px solid #ffeeba"><i class="fas fa-exclamation-triangle"></i> El usuario <strong>@' + usernameKey + '</strong> ya existe. Elige otro.</div>';
     return;
   }
 
   var hashedPass = await hashPassword(pass);
-  setUserDoc(usernameKey, {
+  await setUserDoc(usernameKey, {
     name: name,
     username: usernameKey,
     passwordHash: hashedPass,
@@ -3700,10 +3932,10 @@ async function handleCreateUser() {
   loadUsersList();
 }
 
-function loadUsersList() {
+async function loadUsersList() {
   const container = document.getElementById('usersModalList');
   if (!container) return;
-  const allUsers = getAllUsersSorted();
+  const allUsers = await getAllUsersSorted();
   if (allUsers.length === 0) {
     container.innerHTML = '<div style="text-align:center;padding:1.5rem;color:#888">No hay usuarios registrados.</div>';
     return;
@@ -3764,14 +3996,14 @@ function confirmToggleRole(uid, username, newRole) {
   msgDiv.innerHTML = '';
 }
 
-function executeToggleRole(uid, newRole) {
-  const userData = getUserDoc(uid);
+async function executeToggleRole(uid, newRole) {
+  const userData = await getUserDoc(uid);
   if (!userData) {
     document.getElementById('usersModalMsg').innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#f8d7da;color:#721c24;font-size:.85rem"><i class="fas fa-times"></i> Usuario no encontrado.</div>';
     return;
   }
   userData.role = newRole;
-  setUserDoc(uid, userData);
+  await setUserDoc(uid, userData);
   if (state.user && state.user.uid === uid) {
     state.userRole = newRole;
     state.user.role = newRole;
@@ -3798,8 +4030,8 @@ function confirmDeleteUser(uid, displayName) {
   document.getElementById('usersModalMsg').innerHTML = '';
 }
 
-function executeDeleteUser(uid) {
-  removeUserDoc(uid);
+async function executeDeleteUser(uid) {
+  await removeUserDoc(uid);
   document.getElementById('usersModalConfirm').innerHTML = '';
   document.getElementById('usersModalMsg').innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#d4edda;color:#155724;font-size:.85rem"><i class="fas fa-check"></i> Usuario eliminado correctamente.</div>';
   loadUsersList();
@@ -3951,6 +4183,30 @@ async function handleImportJSON(event) {
   document.getElementById('portalCurso').textContent = 'Cargando...';
   // Auth overlay is handled by restoreSession() — do NOT call showAuthOverlay() here
   // as it would overwrite the correct state set by checkUsersAndShowAuth().
+
+  // Migrate existing users from localStorage to Firestore (one-time migration)
+  try {
+    const localUsers = getUsersDB();
+    const localKeys = Object.keys(localUsers);
+    if (localKeys.length > 0) {
+      // Check if Firestore already has users
+      const snapshot = await db.collection('_users').limit(1).get();
+      if (snapshot.empty) {
+        // Firestore is empty, migrate from localStorage
+        const batch = db.batch();
+        for (const uid of localKeys) {
+          batch.set(db.collection('_users').doc(uid), localUsers[uid]);
+        }
+        await batch.commit();
+        console.log('Migrated ' + localKeys.length + ' user(s) from localStorage to Firestore.');
+      }
+      // Clear localStorage users cache — Firestore is now the source of truth
+      localStorage.removeItem(AUTH_USERS_KEY);
+    }
+  } catch (err) {
+    console.warn('User migration check failed:', err);
+  }
+
   await checkConnection();
 })();
 
