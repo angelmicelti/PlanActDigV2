@@ -1045,7 +1045,7 @@ async function handleAuth() {
       });
 
       const session = { uid: usernameKey, username: usernameKey, name: name, role: 'admin' };
-      sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+      localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
       state.user = session;
       state.userRole = 'admin';
       state._userName = name;
@@ -1077,7 +1077,7 @@ async function handleAuth() {
         return;
       }
       const session = { uid: usernameKey, username: userData.username, name: userData.name, role: userData.role };
-      sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+      localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
       state.user = session;
       state.userRole = userData.role || 'viewer';
       state._userName = userData.name || '';
@@ -1101,7 +1101,7 @@ async function handleAuth() {
 }
 
 function handleLogout() {
-  sessionStorage.removeItem(AUTH_SESSION_KEY);
+  localStorage.removeItem(AUTH_SESSION_KEY);
   state.user = null;
   state.userRole = 'viewer';
   state._userName = '';
@@ -1150,19 +1150,13 @@ function applyRoleUI() {
 
 async function restoreSession() {
   try {
-    // Migration: move old localStorage session to sessionStorage
-    var oldSession = localStorage.getItem(AUTH_SESSION_KEY);
-    if (oldSession && !sessionStorage.getItem(AUTH_SESSION_KEY)) {
-      sessionStorage.setItem(AUTH_SESSION_KEY, oldSession);
-      localStorage.removeItem(AUTH_SESSION_KEY);
-    }
-    var raw = sessionStorage.getItem(AUTH_SESSION_KEY);
+    var raw = localStorage.getItem(AUTH_SESSION_KEY);
     if (!raw) { checkUsersAndShowAuth(); return; }
     const session = JSON.parse(raw);
     if (!session || !session.uid || !session.username) { checkUsersAndShowAuth(); return; }
     const userData = getUserDoc(session.uid);
     if (!userData) {
-      sessionStorage.removeItem(AUTH_SESSION_KEY);
+      localStorage.removeItem(AUTH_SESSION_KEY);
       checkUsersAndShowAuth();
       return;
     }
@@ -1178,7 +1172,7 @@ async function restoreSession() {
     }
   } catch (err) {
     console.error('Session restore error:', err);
-    sessionStorage.removeItem(AUTH_SESSION_KEY);
+    localStorage.removeItem(AUTH_SESSION_KEY);
     checkUsersAndShowAuth();
   }
 }
@@ -3781,7 +3775,7 @@ function executeToggleRole(uid, newRole) {
   if (state.user && state.user.uid === uid) {
     state.userRole = newRole;
     state.user.role = newRole;
-    sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(state.user));
+    localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(state.user));
     applyRoleUI();
     renderView();
   }
@@ -3955,9 +3949,8 @@ async function handleImportJSON(event) {
 // ==================== INIT ====================
 (async function init() {
   document.getElementById('portalCurso').textContent = 'Cargando...';
-  // Show auth overlay initially
-  showAuthOverlay();
-  // Auth state change listener will trigger loadCourses after successful login
+  // Auth overlay is handled by restoreSession() — do NOT call showAuthOverlay() here
+  // as it would overwrite the correct state set by checkUsersAndShowAuth().
   await checkConnection();
 })();
 
