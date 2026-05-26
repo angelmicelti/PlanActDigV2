@@ -159,6 +159,13 @@ nav::-webkit-scrollbar{display:none}
 .info-chip i:hover{opacity:1;transform:scale(1.2)}
 .info-chip.resp-chip{background:var(--primary-color)}
 .info-chip.temp-chip{background:var(--warning-color)}
+.info-chip.alum-chip{background:rgba(142,68,173,.15);color:#8e44ad;border:1.5px solid rgba(142,68,173,.3)}
+.info-chip.alum-duplicated{background:rgba(231,76,60,.12);color:#c0392b;border-color:rgba(231,76,60,.4);box-shadow:0 0 0 1px rgba(231,76,60,.2)}
+.alum-dup-icon{font-size:.7rem!important;color:#e74c3c;opacity:1!important;cursor:help!important;animation:alumDupPulse 2s infinite;margin-left:2px}
+.alum-dup-icon:hover{transform:scale(1.3)!important}
+@keyframes alumDupPulse{0%,100%{opacity:1}50%{opacity:.5}}
+.alumnado-view-section{margin-top:.6rem;padding:.6rem .8rem;background:rgba(142,68,173,.04);border-radius:8px;border:1px solid rgba(142,68,173,.1)}
+.alumnado-view-label{font-size:.78rem;font-weight:600;color:#8e44ad;margin-bottom:.4rem;display:flex;align-items:center;gap:.35rem}
 @keyframes chipIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
 .info-add-row{display:flex;gap:.35rem;margin-top:.4rem}
 .info-add-row select{flex:1;padding:.45rem .6rem;border:1px solid #ddd;border-radius:6px;font-size:.85rem;background:#fff;transition:all .3s;font-family:inherit;min-width:0}
@@ -552,15 +559,15 @@ nav::-webkit-scrollbar{display:none}
     </div>
     <div class="form-group">
       <label>Título *</label>
-      <input class="form-input" type="text" id="formTitulo" placeholder="Título de la línea" onblur="scheduleAutoSaveLineaField('titulo')">
+      <input class="form-input" type="text" id="formTitulo" placeholder="Título de la línea">
     </div>
     <div class="form-group">
       <label>Descripción *</label>
-      <textarea class="form-textarea" id="formDescripcion" placeholder="Descripción de la línea" onblur="scheduleAutoSaveLineaField('descripcion')"></textarea>
+      <textarea class="form-textarea" id="formDescripcion" placeholder="Descripción de la línea"></textarea>
     </div>
     <div class="form-group">
       <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer">
-        <input type="checkbox" id="formSteam4" onchange="scheduleAutoSaveLineaField('steam4')">
+        <input type="checkbox" id="formSteam4">
         Vinculada al Proyecto STEAM 4.0
       </label>
     </div>
@@ -575,11 +582,11 @@ nav::-webkit-scrollbar{display:none}
       </div>
       <div class="form-group">
         <label>Objeto de Evaluación</label>
-        <input class="form-input" type="text" id="formEvalObjeto" placeholder="Objeto de evaluación" onblur="scheduleAutoSaveLineaField('evalObjeto')">
+        <input class="form-input" type="text" id="formEvalObjeto" placeholder="Objeto de evaluación">
       </div>
       <div class="form-group">
         <label>Herramientas de Evaluación</label>
-        <input class="form-input" type="text" id="formEvalHerr" placeholder="Herramientas" onblur="scheduleAutoSaveLineaField('evalHerr')">
+        <input class="form-input" type="text" id="formEvalHerr" placeholder="Herramientas">
       </div>
       <div class="form-group">
         <label>Responsables <span style="font-weight:400;font-size:.8rem;color:#999">(haz clic para añadir/eliminar)</span></label>
@@ -592,7 +599,7 @@ nav::-webkit-scrollbar{display:none}
       </div>
       <div class="form-group">
         <label>Temporalización (separados por coma)</label>
-        <input class="form-input" type="text" id="formTemporalizacion" placeholder="Primer trimestre, Segundo trimestre" onblur="scheduleAutoSaveLineaField('temporalizacion')">
+        <input class="form-input" type="text" id="formTemporalizacion" placeholder="Primer trimestre, Segundo trimestre">
       </div>
     </div>
     <div id="editModalMessage"></div>
@@ -628,6 +635,11 @@ nav::-webkit-scrollbar{display:none}
     <div class="form-group">
       <label>Enunciado de la actuación *</label>
       <textarea class="form-textarea" id="actEnunciado" placeholder="Describe la actuación..." style="min-height:100px"></textarea>
+    </div>
+    <div class="form-group">
+      <label><i class="fas fa-user-graduate" style="color:var(--primary-color)"></i> Alumnado participante</label>
+      <input class="form-input" type="text" id="actAlumnado" placeholder="Nombres separados por comas (ej: Ana García, Pedro López)">
+      <span style="font-size:.78rem;color:#888;margin-top:.25rem;display:block">Introduce los nombres de los alumnos y alumnas que participan en esta actuación, separados por comas.</span>
     </div>
     <div id="actuacionModalMessage"></div>
     <div class="btn-row">
@@ -805,7 +817,6 @@ async function hashPassword(password) {
 }
 
 function getUsersDB() {
-  // Kept as cache helper; actual source of truth is now Firestore
   try {
     return JSON.parse(localStorage.getItem(AUTH_USERS_KEY)) || {};
   } catch { return {}; }
@@ -815,65 +826,26 @@ function saveUsersDB(usersDB) {
   localStorage.setItem(AUTH_USERS_KEY, JSON.stringify(usersDB));
 }
 
-// ---- Firestore-backed user operations (async) ----
-
-async function getUserDoc(usernameKey) {
-  try {
-    const doc = await db.collection('_users').doc(usernameKey).get();
-    if (doc.exists) return doc.data();
-  } catch (err) {
-    console.warn('getUserDoc Firestore error, falling back to localStorage:', err);
-  }
-  // Fallback to localStorage cache
+function getUserDoc(usernameKey) {
   const usersDB = getUsersDB();
   return usersDB[usernameKey] || null;
 }
 
-async function setUserDoc(usernameKey, userData) {
-  try {
-    await db.collection('_users').doc(usernameKey).set(userData);
-  } catch (err) {
-    console.error('setUserDoc Firestore error:', err);
-  }
-  // Also update localStorage cache for offline fallback
+function setUserDoc(usernameKey, userData) {
   const usersDB = getUsersDB();
   usersDB[usernameKey] = userData;
   saveUsersDB(usersDB);
 }
 
-async function removeUserDoc(usernameKey) {
-  try {
-    await db.collection('_users').doc(usernameKey).delete();
-  } catch (err) {
-    console.error('removeUserDoc Firestore error:', err);
-  }
+function removeUserDoc(usernameKey) {
   const usersDB = getUsersDB();
   delete usersDB[usernameKey];
   saveUsersDB(usersDB);
 }
 
-async function getAllUsersSorted() {
-  try {
-    const snapshot = await db.collection('_users').orderBy('createdAt', 'asc').get();
-    if (!snapshot.empty) {
-      return snapshot.docs.map(d => ({ uid: d.id, ...d.data() }));
-    }
-  } catch (err) {
-    console.warn('getAllUsersSorted Firestore error, falling back to localStorage:', err);
-  }
-  // Fallback to localStorage cache
+function getAllUsersSorted() {
   const usersDB = getUsersDB();
   return Object.keys(usersDB).map(uid => ({ uid, ...usersDB[uid] })).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
-}
-
-async function hasAnyUsers() {
-  try {
-    const snapshot = await db.collection('_users').limit(1).get();
-    return !snapshot.empty;
-  } catch (err) {
-    console.warn('hasAnyUsers Firestore error, falling back to localStorage:', err);
-  }
-  return Object.keys(getUsersDB()).length > 0;
 }
 
 // Base list of predefined responsables (mutable — new entries can be added)
@@ -967,158 +939,6 @@ const state = {
 };
 
 let unsubscribeFns = [];
-
-// ==================== AUTO-SAVE SYSTEM ====================
-let _autoSaveTimer = null;
-const AUTO_SAVE_DELAY = 800; // ms debounce
-
-function showAutoSaveFeedback(saving) {
-  let indicator = document.getElementById('autoSaveIndicator');
-  if (!indicator) {
-    indicator = document.createElement('div');
-    indicator.id = 'autoSaveIndicator';
-    indicator.style.cssText = 'position:fixed;bottom:1rem;right:1rem;z-index:8000;display:flex;align-items:center;gap:.4rem;padding:.4rem .8rem;border-radius:20px;font-size:.75rem;font-weight:600;transition:all .3s;box-shadow:0 2px 8px rgba(0,0,0,.12);pointer-events:none;opacity:0;';
-    document.body.appendChild(indicator);
-  }
-  if (saving) {
-    indicator.style.background = '#fff3cd';
-    indicator.style.color = '#856404';
-    indicator.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
-    indicator.style.opacity = '1';
-  } else {
-    indicator.style.background = '#d4edda';
-    indicator.style.color = '#155724';
-    indicator.innerHTML = '<i class="fas fa-check"></i> Guardado';
-    indicator.style.opacity = '1';
-    clearTimeout(indicator._hideTimer);
-    indicator._hideTimer = setTimeout(() => { indicator.style.opacity = '0'; }, 2000);
-  }
-}
-
-/**
- * Auto-saves the current actuacion evaluation (chips) to Firestore.
- * Called after any chip add/remove in the act eval editing panel.
- */
-function scheduleAutoSaveActEval(taskId) {
-  clearTimeout(_autoSaveTimer);
-  _autoSaveTimer = setTimeout(() => autoSaveActEval(taskId), AUTO_SAVE_DELAY);
-}
-
-async function autoSaveActEval(taskId) {
-  if (!state.currentLinea || !state.currentCourse) return;
-  const ambitoId = state.currentAmbitoId;
-  const lineaId = state.currentLinea.id;
-
-  // Parse taskId
-  let taskType = 'intervencion';
-  let idx = -1;
-  if (taskId.includes('-formacion-')) {
-    const parts = taskId.split('-formacion-');
-    idx = parseInt(parts[parts.length - 1]);
-    taskType = 'formacion';
-  } else if (taskId.includes('-intervencion-')) {
-    const parts = taskId.split('-intervencion-');
-    idx = parseInt(parts[parts.length - 1]);
-    taskType = 'intervencion';
-  }
-  if (idx < 0) return;
-
-  // Read current chips from the DOM
-  const responsables = readChipsFromContainer('actRespChips-' + taskId);
-  const herramientas = readChipsFromContainer('actHerrChips-' + taskId);
-  const temporalizacion = readChipsFromContainer('actTempChips-' + taskId);
-
-  showAutoSaveFeedback(true);
-  try {
-    const ambitoDoc = await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(ambitoId).get();
-    const ambitoSnap = ambitoDoc.data();
-    if (!ambitoSnap || !ambitoSnap.lineas) { showAutoSaveFeedback(false); return; }
-    const lineas = ambitoSnap.lineas;
-    const lineaIdx = lineas.findIndex(l => l.id === lineaId);
-    if (lineaIdx === -1) { showAutoSaveFeedback(false); return; }
-
-    const fieldKey = taskType === 'formacion' ? 'tareasFormacion' : 'tareasIntervencion';
-    const rawTarea = lineas[lineaIdx][fieldKey][idx];
-    const texto = typeof rawTarea === 'string' ? rawTarea : (rawTarea.texto || '');
-    lineas[lineaIdx][fieldKey][idx] = {
-      texto: texto,
-      evaluacion: { responsables, herramientas, temporalizacion }
-    };
-    await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(ambitoId).update({ lineas });
-    showAutoSaveFeedback(false);
-  } catch (err) {
-    console.error('Auto-save act eval error:', err);
-    showAutoSaveFeedback(false);
-  }
-}
-
-/**
- * Auto-saves linea field (titulo or descripcion) on blur.
- */
-function scheduleAutoSaveLineaField(field) {
-  clearTimeout(_autoSaveTimer);
-  _autoSaveTimer = setTimeout(() => autoSaveLineaField(field), AUTO_SAVE_DELAY);
-}
-
-async function autoSaveLineaField(field) {
-  if (!state.currentLinea || !state.currentCourse) return;
-  const ambitoId = state.currentAmbitoId;
-  const lineaId = state.currentLinea.id;
-
-  let inputEl;
-  if (field === 'titulo') inputEl = document.getElementById('formTitulo');
-  else if (field === 'descripcion') inputEl = document.getElementById('formDescripcion');
-  else if (field === 'evalObjeto') inputEl = document.getElementById('formEvalObjeto');
-  else if (field === 'evalHerr') inputEl = document.getElementById('formEvalHerr');
-  else if (field === 'temporalizacion') inputEl = document.getElementById('formTemporalizacion');
-  else if (field === 'steam4') {
-    // Special case: toggle
-    const checkbox = document.getElementById('formSteam4');
-    if (!checkbox) return;
-    showAutoSaveFeedback(true);
-    try {
-      const ambitoDoc = await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(ambitoId).get();
-      const ambitoSnap = ambitoDoc.data();
-      if (!ambitoSnap || !ambitoSnap.lineas) { showAutoSaveFeedback(false); return; }
-      const lineas = ambitoSnap.lineas;
-      const lineaIdx = lineas.findIndex(l => l.id === lineaId);
-      if (lineaIdx === -1) { showAutoSaveFeedback(false); return; }
-      lineas[lineaIdx].steam4 = checkbox.checked;
-      await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(ambitoId).update({ lineas });
-      showAutoSaveFeedback(false);
-    } catch (err) {
-      console.error('Auto-save steam toggle error:', err);
-      showAutoSaveFeedback(false);
-    }
-    return;
-  } else return;
-  if (!inputEl) return;
-  const value = inputEl.value;
-
-  showAutoSaveFeedback(true);
-  try {
-    const ambitoDoc = await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(ambitoId).get();
-    const ambitoSnap = ambitoDoc.data();
-    if (!ambitoSnap || !ambitoSnap.lineas) { showAutoSaveFeedback(false); return; }
-    const lineas = ambitoSnap.lineas;
-    const lineaIdx = lineas.findIndex(l => l.id === lineaId);
-    if (lineaIdx === -1) { showAutoSaveFeedback(false); return; }
-    if (field === 'titulo') lineas[lineaIdx].titulo = value;
-    else if (field === 'descripcion') lineas[lineaIdx].descripcion = value;
-    else if (field === 'evalObjeto' || field === 'evalHerr') {
-      if (!lineas[lineaIdx].evaluacion) lineas[lineaIdx].evaluacion = {};
-      if (field === 'evalObjeto') lineas[lineaIdx].evaluacion.objeto = value;
-      else lineas[lineaIdx].evaluacion.herramientas = value;
-    } else if (field === 'temporalizacion') {
-      lineas[lineaIdx].temporalizacion = value.split(',').map(s => s.trim()).filter(Boolean);
-    }
-    await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(ambitoId).update({ lineas });
-    showAutoSaveFeedback(false);
-  } catch (err) {
-    console.error('Auto-save linea field error:', err);
-    showAutoSaveFeedback(false);
-  }
-}
 
 // ==================== FIREBASE CONNECTION ====================
 function setConnectionStatus(connected) {
@@ -1228,7 +1048,7 @@ async function handleAuth() {
       }
 
       const hashedPass = await hashPassword(pass);
-      await setUserDoc(usernameKey, {
+      setUserDoc(usernameKey, {
         name: name,
         username: usernameKey,
         passwordHash: hashedPass,
@@ -1237,7 +1057,7 @@ async function handleAuth() {
       });
 
       const session = { uid: usernameKey, username: usernameKey, name: name, role: 'admin' };
-      localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+      sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
       state.user = session;
       state.userRole = 'admin';
       state._userName = name;
@@ -1252,7 +1072,7 @@ async function handleAuth() {
       }
     } else {
       // --- LOGIN NORMAL ---
-      const userData = await getUserDoc(usernameKey);
+      const userData = getUserDoc(usernameKey);
       if (!userData) {
         errorEl.textContent = 'Usuario o contrase\u00f1a incorrectos.';
         errorEl.style.display = 'flex';
@@ -1269,7 +1089,7 @@ async function handleAuth() {
         return;
       }
       const session = { uid: usernameKey, username: userData.username, name: userData.name, role: userData.role };
-      localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
+      sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(session));
       state.user = session;
       state.userRole = userData.role || 'viewer';
       state._userName = userData.name || '';
@@ -1293,7 +1113,7 @@ async function handleAuth() {
 }
 
 function handleLogout() {
-  localStorage.removeItem(AUTH_SESSION_KEY);
+  sessionStorage.removeItem(AUTH_SESSION_KEY);
   state.user = null;
   state.userRole = 'viewer';
   state._userName = '';
@@ -1342,14 +1162,20 @@ function applyRoleUI() {
 
 async function restoreSession() {
   try {
-    var raw = localStorage.getItem(AUTH_SESSION_KEY);
-    if (!raw) { await checkUsersAndShowAuth(); return; }
-    const session = JSON.parse(raw);
-    if (!session || !session.uid || !session.username) { await checkUsersAndShowAuth(); return; }
-    const userData = await getUserDoc(session.uid);
-    if (!userData) {
+    // Migration: move old localStorage session to sessionStorage
+    var oldSession = localStorage.getItem(AUTH_SESSION_KEY);
+    if (oldSession && !sessionStorage.getItem(AUTH_SESSION_KEY)) {
+      sessionStorage.setItem(AUTH_SESSION_KEY, oldSession);
       localStorage.removeItem(AUTH_SESSION_KEY);
-      await checkUsersAndShowAuth();
+    }
+    var raw = sessionStorage.getItem(AUTH_SESSION_KEY);
+    if (!raw) { checkUsersAndShowAuth(); return; }
+    const session = JSON.parse(raw);
+    if (!session || !session.uid || !session.username) { checkUsersAndShowAuth(); return; }
+    const userData = getUserDoc(session.uid);
+    if (!userData) {
+      sessionStorage.removeItem(AUTH_SESSION_KEY);
+      checkUsersAndShowAuth();
       return;
     }
     state.user = session;
@@ -1364,13 +1190,14 @@ async function restoreSession() {
     }
   } catch (err) {
     console.error('Session restore error:', err);
-    localStorage.removeItem(AUTH_SESSION_KEY);
-    await checkUsersAndShowAuth();
+    sessionStorage.removeItem(AUTH_SESSION_KEY);
+    checkUsersAndShowAuth();
   }
 }
 
-async function checkUsersAndShowAuth() {
-  const hasUsers = await hasAnyUsers();
+function checkUsersAndShowAuth() {
+  const usersDB = getUsersDB();
+  const hasUsers = Object.keys(usersDB).length > 0;
   state.needsAdminSetup = !hasUsers;
   showAuthOverlay();
 }
@@ -1450,10 +1277,15 @@ async function listenToCourseData() {
             id: l.id,
             titulo: l.titulo || '',
             descripcion: l.descripcion || '',
-            tareasFormacion: l.tareasFormacion || [],
+            tareasFormacion: (l.tareasFormacion || []).map(t => {
+              if (typeof t === 'string') return { texto: t, evaluacion: { responsables: [], herramientas: [], temporalizacion: [], alumnado: [] } };
+              const ev = t.evaluacion || { responsables: [], herramientas: [], temporalizacion: [] };
+              return { texto: t.texto || '', evaluacion: { ...ev, alumnado: ev.alumnado || [] } };
+            }),
             tareasIntervencion: (l.tareasIntervencion || []).map(t => {
-              if (typeof t === 'string') return { texto: t, evaluacion: { responsables: [], herramientas: [], temporalizacion: [] } };
-              return { texto: t.texto || '', evaluacion: t.evaluacion || { responsables: [], herramientas: [], temporalizacion: [] } };
+              if (typeof t === 'string') return { texto: t, evaluacion: { responsables: [], herramientas: [], temporalizacion: [], alumnado: [] } };
+              const ev = t.evaluacion || { responsables: [], herramientas: [], temporalizacion: [] };
+              return { texto: t.texto || '', evaluacion: { ...ev, alumnado: ev.alumnado || [] } };
             }),
             evaluacion: l.evaluacion || { objeto: '', herramientas: '' },
             responsables: l.responsables || [],
@@ -1492,30 +1324,6 @@ async function listenToCourseData() {
     });
 
   unsubscribeFns = [ambitosUnsub, estadosUnsub];
-
-  // Listen to global catalogos (responsables, herramientas, temporalización)
-  const catalogosUnsub = db.collection('planes').doc('_config').collection('catalogos').doc('global')
-    .onSnapshot(doc => {
-      if (doc.exists) {
-        const data = doc.data();
-        if (data.responsables && Array.isArray(data.responsables)) {
-          const merged = new Set(RESPONSABLES_BASE);
-          data.responsables.forEach(r => merged.add(r));
-          RESPONSABLES_BASE = Array.from(merged).sort();
-        }
-        if (data.temporalizacion && Array.isArray(data.temporalizacion)) {
-          const merged = new Set(TEMP_PREDEFINED_BASE);
-          data.temporalizacion.forEach(t => merged.add(t));
-          TEMP_PREDEFINED = Array.from(merged).sort();
-        }
-        if (data.herramientas && Array.isArray(data.herramientas)) {
-          HERRAMIENTAS_BASE = data.herramientas;
-        }
-      }
-    }, err => {
-      // Silent — catalogos are not critical
-    });
-  unsubscribeFns.push(catalogosUnsub);
 }
 
 // ==================== NAVIGATION ====================
@@ -1868,9 +1676,11 @@ function renderTaskItem(taskId, texto, icono, titulo, estado, isActuacion, evalD
   const ev = {
     responsables: (evalData && evalData.responsables) || [],
     herramientas: herrArray,
-    temporalizacion: (evalData && evalData.temporalizacion) || []
+    temporalizacion: (evalData && evalData.temporalizacion) || [],
+    alumnado: (evalData && evalData.alumnado) || []
   };
   const hasEval = ev.responsables.length > 0 || ev.herramientas.length > 0 || ev.temporalizacion.length > 0;
+  const hasAlumnado = ev.alumnado.length > 0;
   const safeTaskId = taskId.replace(/'/g, "\\'");
   const canEdit = isAdmin();
 
@@ -1878,6 +1688,7 @@ function renderTaskItem(taskId, texto, icono, titulo, estado, isActuacion, evalD
   const sortedResp = [...ev.responsables].sort();
   const sortedHerr = [...ev.herramientas].sort();
   const sortedTemp = [...ev.temporalizacion].sort();
+  const sortedAlum = [...ev.alumnado].sort();
 
   let evalHtml = '';
   {
@@ -1940,6 +1751,19 @@ function renderTaskItem(taskId, texto, icono, titulo, estado, isActuacion, evalD
               </div>
             </div>
           </div>
+          <!-- Sección de Alumnado -->
+          <div class="eval-table-edit-row" style="margin-top:.8rem">
+            <div class="eval-table-edit-field" style="flex:1 1 100%">
+              <label><i class="fas fa-user-graduate" style="color:#8e44ad"></i> Alumnado participante</label>
+              <div class="info-chips" id="actAlumChips-${safeTaskId}">
+                ${sortedAlum.map(a => buildAlumnadoChip(a, safeTaskId, true)).join('')}
+              </div>
+              <div class="info-new-row">
+                <input class="info-new-input" type="text" id="actAlumNewInput-${safeTaskId}" placeholder="Nombres separados por comas..." onkeydown="if(event.key==='Enter'){event.preventDefault();parseAlumnadoFromInput('${safeTaskId}')}">
+                <button class="info-new-btn" onclick="parseAlumnadoFromInput('${safeTaskId}')" style="background:rgba(142,68,173,.12);color:#8e44ad"><i class="fas fa-user-plus"></i> Añadir</button>
+              </div>
+            </div>
+          </div>
           <div class="info-edit-row" style="margin-top:1rem">
             <button class="btn-secondary" onclick="cancelEditActEval()">Cancelar</button>
             <button class="btn-primary" onclick="saveActEval('${safeTaskId}')"><i class="fas fa-save"></i> Guardar</button>
@@ -1952,7 +1776,7 @@ function renderTaskItem(taskId, texto, icono, titulo, estado, isActuacion, evalD
             <h5><i class="fas fa-clipboard-check"></i> Evaluación</h5>
             ${canEdit ? `<button class="info-edit-btn" onclick="startEditActEval('${safeTaskId}')"><i class="fas fa-pen"></i> Editar</button>` : ''}
           </div>
-          ${hasEval ? `
+          ${hasEval || hasAlumnado ? `
             <table class="eval-table">
               <thead>
                 <tr>
@@ -1981,6 +1805,14 @@ function renderTaskItem(taskId, texto, icono, titulo, estado, isActuacion, evalD
                 </tr>
               </tbody>
             </table>
+            ${hasAlumnado ? `
+              <div class="alumnado-view-section">
+                <div class="alumnado-view-label"><i class="fas fa-user-graduate" style="color:#8e44ad"></i> Alumnado participante</div>
+                <div class="eval-cell-chips">
+                  ${sortedAlum.map(a => buildAlumnadoChip(a, safeTaskId, false)).join('')}
+                </div>
+              </div>
+            ` : ''}
           ` : `<table class="eval-table"><tbody><tr class="eval-empty-row"><td colspan="3">Sin datos de evaluación</td></tr></tbody></table>`}
         </div>`;
     }
@@ -2567,6 +2399,7 @@ async function saveLinea() {
 function openNewActuacionModal() {
   document.getElementById('actTipoFormacion').checked = true;
   document.getElementById('actEnunciado').value = '';
+  document.getElementById('actAlumnado').value = '';
   document.getElementById('actuacionModalMessage').innerHTML = '';
   updateTipoStyle();
   document.getElementById('actuacionModal').classList.add('active');
@@ -2598,11 +2431,17 @@ async function saveNewActuacion() {
   if (!state.currentLinea) return;
   const tipo = document.querySelector('input[name="actTipo"]:checked').value;
   const enunciado = document.getElementById('actEnunciado').value.trim();
+  const alumnadoRaw = document.getElementById('actAlumnado').value.trim();
 
   if (!enunciado) {
     document.getElementById('actuacionModalMessage').innerHTML = '<div class="modal-message error">El enunciado es obligatorio</div>';
     return;
   }
+
+  // Parsear alumnado: nombres separados por comas, normalizados
+  const alumnado = alumnadoRaw
+    ? alumnadoRaw.split(',').map(s => s.trim()).filter(s => s.length > 0)
+    : [];
 
   const ambitoId = state.currentAmbitoId;
   const lineaId = state.currentLinea.id;
@@ -2627,13 +2466,13 @@ async function saveNewActuacion() {
     if (tipo === 'formacion') {
       const newFormAct = {
         texto: enunciado,
-        evaluacion: { responsables: [], herramientas: [], temporalizacion: [] }
+        evaluacion: { responsables: [], herramientas: [], temporalizacion: [], alumnado: alumnado }
       };
       lineas[lineaIdx].tareasFormacion = [...(lineas[lineaIdx].tareasFormacion || []), newFormAct];
     } else {
       const newAct = {
         texto: enunciado,
-        evaluacion: { responsables: [], herramientas: [], temporalizacion: [] }
+        evaluacion: { responsables: [], herramientas: [], temporalizacion: [], alumnado: alumnado }
       };
       lineas[lineaIdx].tareasIntervencion = [...(lineas[lineaIdx].tareasIntervencion || []), newAct];
     }
@@ -3332,6 +3171,7 @@ async function saveActEval(taskId) {
   const responsables = readChipsFromContainer('actRespChips-' + taskId);
   const herramientas = readChipsFromContainer('actHerrChips-' + taskId);
   const temporalizacion = readChipsFromContainer('actTempChips-' + taskId);
+  const alumnado = readChipsFromContainer('actAlumChips-' + taskId);
 
   // Save to Firestore
   try {
@@ -3347,7 +3187,7 @@ async function saveActEval(taskId) {
     const texto = typeof rawTarea === 'string' ? rawTarea : (rawTarea.texto || '');
     lineas[lineaIdx][fieldKey][idx] = {
       texto: texto,
-      evaluacion: { responsables, herramientas, temporalizacion }
+      evaluacion: { responsables, herramientas, temporalizacion, alumnado }
     };
 
     await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(ambitoId).update({ lineas });
@@ -3382,6 +3222,116 @@ async function saveActEval(taskId) {
   }
 }
 
+// ==================== ALUMNADO HELPER FUNCTIONS ====================
+
+/**
+ * Obtiene un mapa de alumnos duplicados en toda la línea actual.
+ * Retorna: { "nombre normalizado": { display, taskIds }, ... }
+ * Solo incluye alumnos que aparecen en 2 o más actuaciones.
+ */
+function getAlumnadoDuplicates() {
+  if (!state.currentLinea) return {};
+  const allTasks = [
+    ...(state.currentLinea.tareasFormacion || []).map((t, i) => ({
+      tarea: t,
+      taskId: state.currentAmbitoId + '-' + state.currentLinea.id + '-formacion-' + i
+    })),
+    ...(state.currentLinea.tareasIntervencion || []).map((t, i) => ({
+      tarea: t,
+      taskId: state.currentAmbitoId + '-' + state.currentLinea.id + '-intervencion-' + i
+    }))
+  ];
+  const nameMap = {}; // normalized lower -> { display, taskIds }
+  for (const { tarea, taskId } of allTasks) {
+    const alumList = (tarea && tarea.evaluacion && tarea.evaluacion.alumnado) || [];
+    for (const name of alumList) {
+      const key = name.trim().toLowerCase();
+      if (!key) continue;
+      if (!nameMap[key]) nameMap[key] = { display: name.trim(), taskIds: [] };
+      nameMap[key].taskIds.push(taskId);
+    }
+  }
+  const dupes = {};
+  for (const [key, val] of Object.entries(nameMap)) {
+    if (val.taskIds.length >= 2) dupes[key] = val;
+  }
+  return dupes;
+}
+
+/**
+ * Renderiza un chip de alumnado con indicador de duplicado si procede.
+ */
+function buildAlumnadoChip(name, taskId, isEditing) {
+  const dupes = getAlumnadoDuplicates();
+  const key = name.trim().toLowerCase();
+  const isDup = dupes[key] && dupes[key].taskIds.length >= 2;
+  let cls = 'info-chip alum-chip' + (isDup ? ' alum-duplicated' : '');
+  let html = '<span class="' + cls + '" data-value="' + escapeAttr(name) + '">';
+  html += escapeHtml(name);
+  if (isDup) {
+    html += ' <i class="fas fa-exclamation-triangle alum-dup-icon" title="Este alumno/a aparece en ' + dupes[key].taskIds.length + ' actuaciones"></i>';
+  }
+  if (isEditing) {
+    html += '<i class="fas fa-times"></i>';
+  }
+  html += '</span>';
+  return html;
+}
+
+/**
+ * Parsea nombres separados por comas desde un input y los añade como chips.
+ */
+function parseAlumnadoFromInput(taskId) {
+  const input = document.getElementById('actAlumNewInput-' + taskId);
+  const chipsEl = document.getElementById('actAlumChips-' + taskId);
+  if (!input || !chipsEl) return;
+  const raw = input.value.trim();
+  if (!raw) return;
+  const names = raw.split(',').map(s => s.trim()).filter(s => s.length > 0);
+  const existing = readChipsFromContainer('actAlumChips-' + taskId).map(n => n.toLowerCase());
+  let added = 0;
+  for (const name of names) {
+    if (existing.includes(name.toLowerCase())) continue;
+    const chip = document.createElement('span');
+    chip.className = 'info-chip alum-chip';
+    chip.innerHTML = escapeHtml(name) + '<i class="fas fa-times"></i>';
+    chip.querySelector('i').addEventListener('click', function() {
+      chip.remove();
+      refreshAlumnadoDuplicatedWarnings();
+    });
+    chipsEl.appendChild(chip);
+    existing.push(name.toLowerCase());
+    added++;
+  }
+  input.value = '';
+  if (added > 0) refreshAlumnadoDuplicatedWarnings();
+}
+
+/**
+ * Refresca los indicadores visuales de duplicado en todos los chips de alumnado visibles.
+ */
+function refreshAlumnadoDuplicatedWarnings() {
+  const dupes = getAlumnadoDuplicates();
+  document.querySelectorAll('.alum-chip').forEach(function(chip) {
+    // Obtener nombre del chip excluyendo iconos (leer antes de modificar)
+    const clone = chip.cloneNode(true);
+    clone.querySelectorAll('i').forEach(function(icon) { icon.remove(); });
+    const rawName = clone.textContent.trim().toLowerCase();
+    const isDup = dupes[rawName] && dupes[rawName].taskIds.length >= 2;
+    const existingIcon = chip.querySelector('.alum-dup-icon');
+    if (isDup && !existingIcon) {
+      const icon = document.createElement('i');
+      icon.className = 'fas fa-exclamation-triangle alum-dup-icon';
+      icon.title = 'Este alumno/a aparece en ' + dupes[rawName].taskIds.length + ' actuaciones';
+      chip.appendChild(icon);
+      chip.classList.add('alum-duplicated');
+    } else if (!isDup && existingIcon) {
+      existingIcon.remove();
+      chip.classList.remove('alum-duplicated');
+    }
+  });
+}
+
 // ==================== CHIP HELPERS ====================
 function readChipsFromContainer(containerId) {
   const el = document.getElementById(containerId);
@@ -3403,18 +3353,15 @@ function attachChipRemoveHandlers() {
       const container = chip.parentElement;
       chip.remove();
       const containerId = container.id || '';
-      let taskId = '';
       if (containerId.includes('Resp')) {
-        taskId = containerId.replace('actRespChips-', '');
-        refreshActRespDropdown(taskId);
+        refreshActRespDropdown(containerId.replace('actRespChips-', ''));
       } else if (containerId.includes('Temp')) {
-        taskId = containerId.replace('actTempChips-', '');
-        refreshActTempDropdown(taskId);
+        refreshActTempDropdown(containerId.replace('actTempChips-', ''));
       } else if (containerId.includes('Herr')) {
-        taskId = containerId.replace('actHerrChips-', '');
-        refreshActHerrDropdown(taskId);
+        refreshActHerrDropdown(containerId.replace('actHerrChips-', ''));
+      } else if (containerId.includes('Alum')) {
+        refreshAlumnadoDuplicatedWarnings();
       }
-      if (taskId) scheduleAutoSaveActEval(taskId);
     });
   });
 }
@@ -3443,11 +3390,9 @@ function addActRespFromSelect(taskId) {
   chip.querySelector('i').addEventListener('click', function() {
     chip.remove();
     refreshActRespDropdown(taskId);
-    scheduleAutoSaveActEval(taskId);
   });
   chipsEl.appendChild(chip);
   refreshActRespDropdown(taskId);
-  scheduleAutoSaveActEval(taskId);
 }
 
 function addActRespNew(taskId) {
@@ -3464,7 +3409,6 @@ function addActRespNew(taskId) {
   chip.querySelector('i').addEventListener('click', function() {
     chip.remove();
     refreshActRespDropdown(taskId);
-    scheduleAutoSaveActEval(taskId);
   });
   chipsEl.appendChild(chip);
   if (!RESPONSABLES_BASE.find(r => r.toLowerCase() === nombre.toLowerCase())) {
@@ -3472,7 +3416,6 @@ function addActRespNew(taskId) {
   }
   saveGlobalCatalogoItem('responsables', nombre);
   input.value = '';
-  scheduleAutoSaveActEval(taskId);
   refreshActRespDropdown(taskId);
 }
 
@@ -3500,11 +3443,9 @@ function addActTempFromSelect(taskId) {
   chip.querySelector('i').addEventListener('click', function() {
     chip.remove();
     refreshActTempDropdown(taskId);
-    scheduleAutoSaveActEval(taskId);
   });
   chipsEl.appendChild(chip);
   refreshActTempDropdown(taskId);
-  scheduleAutoSaveActEval(taskId);
 }
 
 function addActTempNew(taskId) {
@@ -3521,13 +3462,11 @@ function addActTempNew(taskId) {
   chip.querySelector('i').addEventListener('click', function() {
     chip.remove();
     refreshActTempDropdown(taskId);
-    scheduleAutoSaveActEval(taskId);
   });
   chipsEl.appendChild(chip);
   saveGlobalCatalogoItem('temporalizacion', nombre);
   input.value = '';
   refreshActTempDropdown(taskId);
-  scheduleAutoSaveActEval(taskId);
 }
 
 // ==================== HERRAMIENTAS CHIP FUNCTIONS (per actuación) ====================
@@ -3606,11 +3545,9 @@ function addActHerrFromSelect(taskId) {
   chip.querySelector('i').addEventListener('click', function() {
     chip.remove();
     refreshActHerrDropdown(taskId);
-    scheduleAutoSaveActEval(taskId);
   });
   chipsEl.appendChild(chip);
   refreshActHerrDropdown(taskId);
-  scheduleAutoSaveActEval(taskId);
 }
 
 function addActHerrNew(taskId) {
@@ -3628,13 +3565,11 @@ function addActHerrNew(taskId) {
   chip.querySelector('i').addEventListener('click', function() {
     chip.remove();
     refreshActHerrDropdown(taskId);
-    scheduleAutoSaveActEval(taskId);
   });
   chipsEl.appendChild(chip);
   saveGlobalCatalogoItem('herramientas', nombre);
   input.value = '';
   refreshActHerrDropdown(taskId);
-  scheduleAutoSaveActEval(taskId);
 }
 
 // ==================== INLINE CHIP EDIT/DELETE (view mode) ====================
@@ -3905,13 +3840,13 @@ async function handleCreateUser() {
   if (pass.length < 6) { msgEl.innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#f8d7da;color:#721c24;font-size:.85rem"><i class="fas fa-times"></i> La contraseña debe tener al menos 6 caracteres.</div>'; return; }
 
   var usernameKey = username.toLowerCase().trim();
-  if (await getUserDoc(usernameKey)) {
+  if (getUserDoc(usernameKey)) {
     msgEl.innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#fff3cd;color:#856404;font-size:.85rem;border:1px solid #ffeeba"><i class="fas fa-exclamation-triangle"></i> El usuario <strong>@' + usernameKey + '</strong> ya existe. Elige otro.</div>';
     return;
   }
 
   var hashedPass = await hashPassword(pass);
-  await setUserDoc(usernameKey, {
+  setUserDoc(usernameKey, {
     name: name,
     username: usernameKey,
     passwordHash: hashedPass,
@@ -3932,10 +3867,10 @@ async function handleCreateUser() {
   loadUsersList();
 }
 
-async function loadUsersList() {
+function loadUsersList() {
   const container = document.getElementById('usersModalList');
   if (!container) return;
-  const allUsers = await getAllUsersSorted();
+  const allUsers = getAllUsersSorted();
   if (allUsers.length === 0) {
     container.innerHTML = '<div style="text-align:center;padding:1.5rem;color:#888">No hay usuarios registrados.</div>';
     return;
@@ -3996,18 +3931,18 @@ function confirmToggleRole(uid, username, newRole) {
   msgDiv.innerHTML = '';
 }
 
-async function executeToggleRole(uid, newRole) {
-  const userData = await getUserDoc(uid);
+function executeToggleRole(uid, newRole) {
+  const userData = getUserDoc(uid);
   if (!userData) {
     document.getElementById('usersModalMsg').innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#f8d7da;color:#721c24;font-size:.85rem"><i class="fas fa-times"></i> Usuario no encontrado.</div>';
     return;
   }
   userData.role = newRole;
-  await setUserDoc(uid, userData);
+  setUserDoc(uid, userData);
   if (state.user && state.user.uid === uid) {
     state.userRole = newRole;
     state.user.role = newRole;
-    localStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(state.user));
+    sessionStorage.setItem(AUTH_SESSION_KEY, JSON.stringify(state.user));
     applyRoleUI();
     renderView();
   }
@@ -4030,8 +3965,8 @@ function confirmDeleteUser(uid, displayName) {
   document.getElementById('usersModalMsg').innerHTML = '';
 }
 
-async function executeDeleteUser(uid) {
-  await removeUserDoc(uid);
+function executeDeleteUser(uid) {
+  removeUserDoc(uid);
   document.getElementById('usersModalConfirm').innerHTML = '';
   document.getElementById('usersModalMsg').innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#d4edda;color:#155724;font-size:.85rem"><i class="fas fa-check"></i> Usuario eliminado correctamente.</div>';
   loadUsersList();
@@ -4181,32 +4116,9 @@ async function handleImportJSON(event) {
 // ==================== INIT ====================
 (async function init() {
   document.getElementById('portalCurso').textContent = 'Cargando...';
-  // Auth overlay is handled by restoreSession() — do NOT call showAuthOverlay() here
-  // as it would overwrite the correct state set by checkUsersAndShowAuth().
-
-  // Migrate existing users from localStorage to Firestore (one-time migration)
-  try {
-    const localUsers = getUsersDB();
-    const localKeys = Object.keys(localUsers);
-    if (localKeys.length > 0) {
-      // Check if Firestore already has users
-      const snapshot = await db.collection('_users').limit(1).get();
-      if (snapshot.empty) {
-        // Firestore is empty, migrate from localStorage
-        const batch = db.batch();
-        for (const uid of localKeys) {
-          batch.set(db.collection('_users').doc(uid), localUsers[uid]);
-        }
-        await batch.commit();
-        console.log('Migrated ' + localKeys.length + ' user(s) from localStorage to Firestore.');
-      }
-      // Clear localStorage users cache — Firestore is now the source of truth
-      localStorage.removeItem(AUTH_USERS_KEY);
-    }
-  } catch (err) {
-    console.warn('User migration check failed:', err);
-  }
-
+  // Show auth overlay initially
+  showAuthOverlay();
+  // Auth state change listener will trigger loadCourses after successful login
   await checkConnection();
 })();
 
