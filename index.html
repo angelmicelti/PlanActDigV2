@@ -1492,6 +1492,9 @@ document.getElementById('portalInicio').addEventListener('click', function() {
 function showAuthOverlay() {
   const overlay = document.getElementById('authOverlay');
   if (!overlay) return;
+  // Ocultar el portal para que no bloquee el login
+  var portal = document.getElementById('portalInicio');
+  if (portal) portal.style.display = 'none';
   overlay.style.display = 'flex';
   // Reset form state
   document.getElementById('authError').style.display = 'none';
