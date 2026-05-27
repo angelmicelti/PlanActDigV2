@@ -471,7 +471,7 @@ nav::-webkit-scrollbar{display:none}
       <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
     </button>
     <p style="text-align:center;color:#aaa;font-size:.75rem;margin-top:1rem">
-      <i class="fas fa-shield-alt"></i> Datos almacenados localmente en el navegador
+      <i class="fas fa-shield-alt"></i> Datos almacenados en la nube
     </p>
   </div>
 </div>
@@ -845,7 +845,7 @@ function applyCourseTheme(cursoId) {
 
 // ==================== AUTH HELPERS ====================
 const AUTH_SESSION_KEY = 'planDigital_session';
-const AUTH_USERS_KEY = 'planDigital_users';
+const USERS_COLLECTION = 'users';
 
 async function hashPassword(password) {
   const encoder = new TextEncoder();
@@ -855,37 +855,89 @@ async function hashPassword(password) {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-function getUsersDB() {
+async function getUsersDB() {
   try {
-    return JSON.parse(localStorage.getItem(AUTH_USERS_KEY)) || {};
-  } catch { return {}; }
+    const snapshot = await db.collection(USERS_COLLECTION).get();
+    const usersDB = {};
+    snapshot.forEach(doc => { usersDB[doc.id] = doc.data(); });
+    return usersDB;
+  } catch (err) {
+    console.error('[getUsersDB] Error accediendo a Firestore:', err);
+    throw new Error('Error de conexi\u00f3n a la nube: no se pudieron leer los usuarios. Verifica las reglas de seguridad de Firestore para la colecci\u00f3n \"users\". Detalle: ' + err.message);
+  }
 }
 
-function saveUsersDB(usersDB) {
-  localStorage.setItem(AUTH_USERS_KEY, JSON.stringify(usersDB));
+async function getUserDoc(usernameKey, throwOnError) {
+  try {
+    const doc = await db.collection(USERS_COLLECTION).doc(usernameKey).get();
+    return doc.exists ? doc.data() : null;
+  } catch (err) {
+    console.error('[getUserDoc] Error accediendo a Firestore:', err);
+    if (throwOnError) throw new Error('Error de conexi\u00f3n a la nube: ' + err.message);
+    return null;
+  }
 }
 
-function getUserDoc(usernameKey) {
-  const usersDB = getUsersDB();
-  return usersDB[usernameKey] || null;
+async function setUserDoc(usernameKey, userData) {
+  try {
+    await db.collection(USERS_COLLECTION).doc(usernameKey).set(userData);
+  } catch (err) {
+    console.error('[setUserDoc] Error guardando en Firestore:', err);
+    throw err;
+  }
 }
 
-function setUserDoc(usernameKey, userData) {
-  const usersDB = getUsersDB();
-  usersDB[usernameKey] = userData;
-  saveUsersDB(usersDB);
+async function removeUserDoc(usernameKey) {
+  try {
+    await db.collection(USERS_COLLECTION).doc(usernameKey).delete();
+  } catch (err) {
+    console.error('[removeUserDoc] Error borrando de Firestore:', err);
+    throw err;
+  }
 }
 
-function removeUserDoc(usernameKey) {
-  const usersDB = getUsersDB();
-  delete usersDB[usernameKey];
-  saveUsersDB(usersDB);
+async function getAllUsersSorted() {
+  try {
+    const snapshot = await db.collection(USERS_COLLECTION).get();
+    const users = [];
+    snapshot.forEach(doc => { users.push({ uid: doc.id, ...doc.data() }); });
+    return users.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+  } catch (err) {
+    console.error('[getAllUsersSorted] Error accediendo a Firestore:', err);
+    return [];
+  }
 }
 
-function getAllUsersSorted() {
-  const usersDB = getUsersDB();
-  return Object.keys(usersDB).map(uid => ({ uid, ...usersDB[uid] })).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+// ==================== MIGRATE LOCAL USERS TO FIRESTORE ====================
+const OLD_USERS_KEY = 'planDigital_users';
+
+async function migrateLocalUsersToCloud() {
+  try {
+    var raw = localStorage.getItem(OLD_USERS_KEY);
+    if (!raw) return;
+    var localDB = JSON.parse(raw);
+    var keys = Object.keys(localDB);
+    if (keys.length === 0) { localStorage.removeItem(OLD_USERS_KEY); return; }
+    console.log('[migrate] Migrando ' + keys.length + ' usuarios desde localStorage a Firestore...');
+    for (var i = 0; i < keys.length; i++) {
+      var uid = keys[i];
+      var existing = await db.collection(USERS_COLLECTION).doc(uid).get();
+      if (!existing.exists) {
+        await db.collection(USERS_COLLECTION).doc(uid).set(localDB[uid]);
+        console.log('[migrate] Usuario migrado: ' + uid);
+      } else {
+        console.log('[migrate] Usuario ya existe en la nube, se omite: ' + uid);
+      }
+    }
+    localStorage.removeItem(OLD_USERS_KEY);
+    console.log('[migrate] Migraci\u00f3n completada. localStorage limpiado.');
+  } catch (err) {
+    console.error('[migrate] Error durante la migraci\u00f3n:', err);
+  }
 }
+
+// Run migration on load
+migrateLocalUsersToCloud();
 
 // Base list of predefined responsables (mutable — new entries can be added)
 let RESPONSABLES_BASE = [
@@ -1087,7 +1139,7 @@ async function handleAuth() {
       }
 
       const hashedPass = await hashPassword(pass);
-      setUserDoc(usernameKey, {
+      await setUserDoc(usernameKey, {
         name: name,
         username: usernameKey,
         passwordHash: hashedPass,
@@ -1111,7 +1163,7 @@ async function handleAuth() {
       }
     } else {
       // --- LOGIN NORMAL ---
-      const userData = getUserDoc(usernameKey);
+      const userData = await getUserDoc(usernameKey, true);
       if (!userData) {
         errorEl.textContent = 'Usuario o contrase\u00f1a incorrectos.';
         errorEl.style.display = 'flex';
@@ -1208,13 +1260,13 @@ async function restoreSession() {
       localStorage.removeItem(AUTH_SESSION_KEY);
     }
     var raw = sessionStorage.getItem(AUTH_SESSION_KEY);
-    if (!raw) { checkUsersAndShowAuth(); return; }
+    if (!raw) { await checkUsersAndShowAuth(); return; }
     const session = JSON.parse(raw);
-    if (!session || !session.uid || !session.username) { checkUsersAndShowAuth(); return; }
-    const userData = getUserDoc(session.uid);
+    if (!session || !session.uid || !session.username) { await checkUsersAndShowAuth(); return; }
+    const userData = await getUserDoc(session.uid, false);
     if (!userData) {
       sessionStorage.removeItem(AUTH_SESSION_KEY);
-      checkUsersAndShowAuth();
+      await checkUsersAndShowAuth();
       return;
     }
     state.user = session;
@@ -1230,15 +1282,25 @@ async function restoreSession() {
   } catch (err) {
     console.error('Session restore error:', err);
     sessionStorage.removeItem(AUTH_SESSION_KEY);
-    checkUsersAndShowAuth();
+    await checkUsersAndShowAuth();
   }
 }
 
-function checkUsersAndShowAuth() {
-  const usersDB = getUsersDB();
-  const hasUsers = Object.keys(usersDB).length > 0;
-  state.needsAdminSetup = !hasUsers;
-  showAuthOverlay();
+async function checkUsersAndShowAuth() {
+  try {
+    const usersDB = await getUsersDB();
+    const hasUsers = Object.keys(usersDB).length > 0;
+    state.needsAdminSetup = !hasUsers;
+    showAuthOverlay();
+  } catch (err) {
+    console.error('[checkUsersAndShowAuth] Error:', err);
+    showAuthOverlay();
+    var errorEl = document.getElementById('authError');
+    if (errorEl) {
+      errorEl.textContent = err.message || 'Error de conexi\\u00f3n a la nube.';
+      errorEl.style.display = 'flex';
+    }
+  }
 }
 
 // Start: try to restore session or show login
@@ -4054,7 +4116,7 @@ function jsEscape(str) {
 // ==================== USERS MANAGEMENT ====================
 let _pendingUserAction = null;
 
-function openUsersModal() {
+async function openUsersModal() {
   if (!isAdmin()) return;
   document.getElementById('usersModal').classList.add('active');
   document.getElementById('usersModalMsg').innerHTML = '';
@@ -4066,7 +4128,7 @@ function openUsersModal() {
   document.getElementById('newUserUsername').value = '';
   document.getElementById('newUserPass').value = '';
   document.getElementById('newUserRole').value = 'viewer';
-  loadUsersList();
+  await loadUsersList();
 }
 
 function closeUsersModal() {
@@ -4106,14 +4168,15 @@ async function handleCreateUser() {
   if (!/^[a-zA-Z0-9_]+$/.test(username)) { msgEl.innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#f8d7da;color:#721c24;font-size:.85rem"><i class="fas fa-times"></i> Solo letras, números y guiones bajos.</div>'; return; }
   if (pass.length < 6) { msgEl.innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#f8d7da;color:#721c24;font-size:.85rem"><i class="fas fa-times"></i> La contraseña debe tener al menos 6 caracteres.</div>'; return; }
 
+  try {
   var usernameKey = username.toLowerCase().trim();
-  if (getUserDoc(usernameKey)) {
+  if (await getUserDoc(usernameKey)) {
     msgEl.innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#fff3cd;color:#856404;font-size:.85rem;border:1px solid #ffeeba"><i class="fas fa-exclamation-triangle"></i> El usuario <strong>@' + usernameKey + '</strong> ya existe. Elige otro.</div>';
     return;
   }
 
   var hashedPass = await hashPassword(pass);
-  setUserDoc(usernameKey, {
+  await setUserDoc(usernameKey, {
     name: name,
     username: usernameKey,
     passwordHash: hashedPass,
@@ -4131,13 +4194,17 @@ async function handleCreateUser() {
 
   var roleText = role === 'admin' ? 'Admin' : 'Usuario';
   msgEl.innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#d4edda;color:#155724;font-size:.85rem"><i class="fas fa-check"></i> Usuario <strong>' + escapeHtml(name) + '</strong> creado como <strong>' + roleText + '</strong>.</div>';
-  loadUsersList();
+  await loadUsersList();
+  } catch (err) {
+    console.error('[handleCreateUser] Error:', err);
+    msgEl.innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#f8d7da;color:#721c24;font-size:.85rem"><i class="fas fa-times"></i> Error al guardar en la nube: ' + escapeHtml(err.message) + '</div>';
+  }
 }
 
-function loadUsersList() {
+async function loadUsersList() {
   const container = document.getElementById('usersModalList');
   if (!container) return;
-  const allUsers = getAllUsersSorted();
+  const allUsers = await getAllUsersSorted();
   if (allUsers.length === 0) {
     container.innerHTML = '<div style="text-align:center;padding:1.5rem;color:#888">No hay usuarios registrados.</div>';
     return;
@@ -4198,14 +4265,14 @@ function confirmToggleRole(uid, username, newRole) {
   msgDiv.innerHTML = '';
 }
 
-function executeToggleRole(uid, newRole) {
-  const userData = getUserDoc(uid);
+async function executeToggleRole(uid, newRole) {
+  const userData = await getUserDoc(uid);
   if (!userData) {
     document.getElementById('usersModalMsg').innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#f8d7da;color:#721c24;font-size:.85rem"><i class="fas fa-times"></i> Usuario no encontrado.</div>';
     return;
   }
   userData.role = newRole;
-  setUserDoc(uid, userData);
+  await setUserDoc(uid, userData);
   if (state.user && state.user.uid === uid) {
     state.userRole = newRole;
     state.user.role = newRole;
@@ -4215,7 +4282,7 @@ function executeToggleRole(uid, newRole) {
   }
   document.getElementById('usersModalConfirm').innerHTML = '';
   document.getElementById('usersModalMsg').innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#d4edda;color:#155724;font-size:.85rem"><i class="fas fa-check"></i> Rol actualizado correctamente.</div>';
-  loadUsersList();
+  await loadUsersList();
 }
 
 function confirmDeleteUser(uid, displayName) {
@@ -4232,11 +4299,11 @@ function confirmDeleteUser(uid, displayName) {
   document.getElementById('usersModalMsg').innerHTML = '';
 }
 
-function executeDeleteUser(uid) {
-  removeUserDoc(uid);
+async function executeDeleteUser(uid) {
+  await removeUserDoc(uid);
   document.getElementById('usersModalConfirm').innerHTML = '';
   document.getElementById('usersModalMsg').innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#d4edda;color:#155724;font-size:.85rem"><i class="fas fa-check"></i> Usuario eliminado correctamente.</div>';
-  loadUsersList();
+  await loadUsersList();
 }
 
 function cancelUserAction() {
