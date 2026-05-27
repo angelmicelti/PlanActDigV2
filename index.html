@@ -857,7 +857,7 @@ async function hashPassword(password) {
 
 async function getUsersDB() {
   try {
-    const snapshot = await db.collection(USERS_COLLECTION).get({ source: 'server' });
+    const snapshot = await db.collection(USERS_COLLECTION).get();
     const usersDB = {};
     snapshot.forEach(function(doc) { usersDB[doc.id] = doc.data(); });
     return usersDB;
@@ -869,7 +869,7 @@ async function getUsersDB() {
 
 async function getUserDoc(usernameKey, throwOnError) {
   try {
-    const doc = await db.collection(USERS_COLLECTION).doc(usernameKey).get({ source: 'server' });
+    const doc = await db.collection(USERS_COLLECTION).doc(usernameKey).get();
     return doc.exists ? doc.data() : null;
   } catch (err) {
     console.error('[getUserDoc] Error accediendo a Firestore:', err);
@@ -882,7 +882,7 @@ async function setUserDoc(usernameKey, userData) {
   try {
     await db.collection(USERS_COLLECTION).doc(usernameKey).set(userData);
     await db.waitForPendingWrites();
-    console.log('[setUserDoc] Usuario ' + usernameKey + ' guardado y sincronizado con el servidor.');
+    console.log('[setUserDoc] Usuario ' + usernameKey + ' guardado y sincronizado.');
   } catch (err) {
     console.error('[setUserDoc] Error guardando en Firestore:', err);
     throw err;
@@ -901,7 +901,7 @@ async function removeUserDoc(usernameKey) {
 
 async function getAllUsersSorted() {
   try {
-    const snapshot = await db.collection(USERS_COLLECTION).get({ source: 'server' });
+    const snapshot = await db.collection(USERS_COLLECTION).get();
     const users = [];
     snapshot.forEach(function(doc) { users.push({ uid: doc.id, name: doc.data().name, username: doc.data().username, role: doc.data().role, createdAt: doc.data().createdAt, passwordHash: doc.data().passwordHash }); });
     return users.sort(function(a, b) { return (a.createdAt || 0) - (b.createdAt || 0); });
@@ -924,7 +924,7 @@ async function migrateLocalUsersToCloud() {
     console.log('[migrate] Migrando ' + keys.length + ' usuarios desde localStorage a Firestore...');
     for (var i = 0; i < keys.length; i++) {
       var uid = keys[i];
-      var existing = await db.collection(USERS_COLLECTION).doc(uid).get({ source: 'server' });
+      var existing = await db.collection(USERS_COLLECTION).doc(uid).get();
       if (!existing.exists) {
         await db.collection(USERS_COLLECTION).doc(uid).set(localDB[uid]);
         await db.waitForPendingWrites();
