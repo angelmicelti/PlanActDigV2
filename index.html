@@ -470,7 +470,7 @@ nav::-webkit-scrollbar{display:none}
     <button id="authBtn" onclick="handleAuth()" class="auth-btn primary">
       <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
     </button>
-    <p style="text-align:center;color:#aaa;font-size:.75rem;margin-top:1rem">
+    <p id="authCloudStatus" style="text-align:center;color:#aaa;font-size:.75rem;margin-top:1rem">
       <i class="fas fa-shield-alt"></i> Datos almacenados en la nube
     </p>
   </div>
@@ -799,6 +799,13 @@ const firebaseConfig = {
   measurementId: "G-GSF5682FYQ"
 };
 firebase.initializeApp(firebaseConfig);
+// Desactivar persistencia offline para garantizar que lecturas y escrituras
+// van siempre al servidor (evita que los datos se queden solo en cache local)
+firebase.firestore().disablePersistence().then(function() {
+  console.log('[Firestore] Persistencia offline desactivada correctamente.');
+}).catch(function(err) {
+  console.warn('[Firestore] No se pudo desactivar persistencia (puede que ya estuviera desactivada):', err.message);
+});
 const db = firebase.firestore();
 
 // ==================== CONSTANTS ====================
@@ -881,6 +888,14 @@ async function getUserDoc(usernameKey, throwOnError) {
 async function setUserDoc(usernameKey, userData) {
   try {
     await db.collection(USERS_COLLECTION).doc(usernameKey).set(userData);
+    // Esperar a que el servidor confirme la escritura
+    await db.waitForPendingWrites();
+    // Verificar que el documento realmente existe en el servidor
+    var verify = await db.collection(USERS_COLLECTION).doc(usernameKey).get({ source: 'server' });
+    if (!verify.exists) {
+      throw new Error('El documento no se guard\u00f3 en el servidor. Verifica tu conexi\u00f3n.');
+    }
+    console.log('[setUserDoc] Usuario ' + usernameKey + ' verificado en el servidor.');
   } catch (err) {
     console.error('[setUserDoc] Error guardando en Firestore:', err);
     throw err;
@@ -1289,18 +1304,32 @@ async function restoreSession() {
 async function checkUsersAndShowAuth() {
   try {
     const usersDB = await getUsersDB();
-    const hasUsers = Object.keys(usersDB).length > 0;
+    const count = Object.keys(usersDB).length;
+    const hasUsers = count > 0;
     state.needsAdminSetup = !hasUsers;
     showAuthOverlay();
+    // Mostrar diagnóstico en pantalla
+    var statusEl = document.getElementById('authCloudStatus');
+    if (statusEl) {
+      statusEl.innerHTML = '<i class="fas fa-cloud"></i> ' + count + ' usuario' + (count !== 1 ? 's' : '') + ' en la nube';
+      statusEl.style.color = count > 0 ? '#27ae60' : '#aaa';
+    }
   } catch (err) {
     console.error('[checkUsersAndShowAuth] Error:', err);
     showAuthOverlay();
     var errorEl = document.getElementById('authError');
     if (errorEl) {
-      errorEl.textContent = err.message || 'Error de conexi\\u00f3n a la nube.';
+      errorEl.textContent = err.message || 'Error de conexión a la nube.';
       errorEl.style.display = 'flex';
     }
+    var statusEl = document.getElementById('authCloudStatus');
+    if (statusEl) {
+      statusEl.innerHTML = '<i class="fas fa-exclamation-triangle" style="color:#e74c3c"></i> Error de conexión a la nube';
+      statusEl.style.color = '#e74c3c';
+    }
   }
+}
+
 }
 
 // Start: try to restore session or show login
