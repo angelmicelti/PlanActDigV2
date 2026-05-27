@@ -1167,7 +1167,9 @@ async function handleAuth() {
       }
     } else {
       // --- LOGIN NORMAL ---
+      console.log('[login] Buscando usuario: "' + usernameKey + '"');
       const userData = await getUserDoc(usernameKey, true);
+      console.log('[login] Resultado getUserDoc:', userData ? 'encontrado (campos: ' + Object.keys(userData).join(', ') + ')' : 'NO encontrado');
       if (!userData) {
         errorEl.textContent = 'Usuario o contrase\u00f1a incorrectos.';
         errorEl.style.display = 'flex';
@@ -1176,6 +1178,8 @@ async function handleAuth() {
         return;
       }
       const hashedPass = await hashPassword(pass);
+      console.log('[login] Hash introducido: ' + hashedPass);
+      console.log('[login] Hash almacenado: ' + (userData.passwordHash || 'NO EXISTE'));
       if (userData.passwordHash !== hashedPass) {
         errorEl.textContent = 'Usuario o contrase\u00f1a incorrectos.';
         errorEl.style.display = 'flex';
@@ -1294,6 +1298,12 @@ async function checkUsersAndShowAuth() {
   try {
     const usersDB = await getUsersDB();
     const count = Object.keys(usersDB).length;
+    const usernames = Object.keys(usersDB);
+    console.log('[auth] Usuarios en Firestore (' + count + '):', usernames);
+    usernames.forEach(function(uid) {
+      var u = usersDB[uid];
+      console.log('[auth]   - @' + uid + ' | name=' + (u.name||'') + ' | role=' + (u.role||'') + ' | passwordHash=' + (u.passwordHash ? 'SI' : 'NO'));
+    });
     const hasUsers = count > 0;
     state.needsAdminSetup = !hasUsers;
     showAuthOverlay();
