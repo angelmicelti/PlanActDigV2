@@ -845,7 +845,7 @@ function applyCourseTheme(cursoId) {
 
 // ==================== AUTH HELPERS ====================
 const AUTH_SESSION_KEY = 'planDigital_session';
-const USERS_COLLECTION = 'users';
+const AUTH_USERS_KEY = 'planDigital_users';
 
 async function hashPassword(password) {
   const encoder = new TextEncoder();
@@ -855,37 +855,36 @@ async function hashPassword(password) {
   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 }
 
-async function getUsersDB() {
+function getUsersDB() {
   try {
-    const snapshot = await db.collection(USERS_COLLECTION).get();
-    const usersDB = {};
-    snapshot.forEach(doc => { usersDB[doc.id] = doc.data(); });
-    return usersDB;
+    return JSON.parse(localStorage.getItem(AUTH_USERS_KEY)) || {};
   } catch { return {}; }
 }
 
-async function getUserDoc(usernameKey) {
-  try {
-    const doc = await db.collection(USERS_COLLECTION).doc(usernameKey).get();
-    return doc.exists ? doc.data() : null;
-  } catch { return null; }
+function saveUsersDB(usersDB) {
+  localStorage.setItem(AUTH_USERS_KEY, JSON.stringify(usersDB));
 }
 
-async function setUserDoc(usernameKey, userData) {
-  await db.collection(USERS_COLLECTION).doc(usernameKey).set(userData);
+function getUserDoc(usernameKey) {
+  const usersDB = getUsersDB();
+  return usersDB[usernameKey] || null;
 }
 
-async function removeUserDoc(usernameKey) {
-  await db.collection(USERS_COLLECTION).doc(usernameKey).delete();
+function setUserDoc(usernameKey, userData) {
+  const usersDB = getUsersDB();
+  usersDB[usernameKey] = userData;
+  saveUsersDB(usersDB);
 }
 
-async function getAllUsersSorted() {
-  try {
-    const snapshot = await db.collection(USERS_COLLECTION).get();
-    const users = [];
-    snapshot.forEach(doc => { users.push({ uid: doc.id, ...doc.data() }); });
-    return users.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
-  } catch { return []; }
+function removeUserDoc(usernameKey) {
+  const usersDB = getUsersDB();
+  delete usersDB[usernameKey];
+  saveUsersDB(usersDB);
+}
+
+function getAllUsersSorted() {
+  const usersDB = getUsersDB();
+  return Object.keys(usersDB).map(uid => ({ uid, ...usersDB[uid] })).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
 }
 
 // Base list of predefined responsables (mutable — new entries can be added)
@@ -1088,7 +1087,7 @@ async function handleAuth() {
       }
 
       const hashedPass = await hashPassword(pass);
-      await setUserDoc(usernameKey, {
+      setUserDoc(usernameKey, {
         name: name,
         username: usernameKey,
         passwordHash: hashedPass,
@@ -1112,7 +1111,7 @@ async function handleAuth() {
       }
     } else {
       // --- LOGIN NORMAL ---
-      const userData = await getUserDoc(usernameKey);
+      const userData = getUserDoc(usernameKey);
       if (!userData) {
         errorEl.textContent = 'Usuario o contrase\u00f1a incorrectos.';
         errorEl.style.display = 'flex';
@@ -1209,13 +1208,13 @@ async function restoreSession() {
       localStorage.removeItem(AUTH_SESSION_KEY);
     }
     var raw = sessionStorage.getItem(AUTH_SESSION_KEY);
-    if (!raw) { await checkUsersAndShowAuth(); return; }
+    if (!raw) { checkUsersAndShowAuth(); return; }
     const session = JSON.parse(raw);
-    if (!session || !session.uid || !session.username) { await checkUsersAndShowAuth(); return; }
-    const userData = await getUserDoc(session.uid);
+    if (!session || !session.uid || !session.username) { checkUsersAndShowAuth(); return; }
+    const userData = getUserDoc(session.uid);
     if (!userData) {
       sessionStorage.removeItem(AUTH_SESSION_KEY);
-      await checkUsersAndShowAuth();
+      checkUsersAndShowAuth();
       return;
     }
     state.user = session;
@@ -1231,12 +1230,12 @@ async function restoreSession() {
   } catch (err) {
     console.error('Session restore error:', err);
     sessionStorage.removeItem(AUTH_SESSION_KEY);
-    await checkUsersAndShowAuth();
+    checkUsersAndShowAuth();
   }
 }
 
-async function checkUsersAndShowAuth() {
-  const usersDB = await getUsersDB();
+function checkUsersAndShowAuth() {
+  const usersDB = getUsersDB();
   const hasUsers = Object.keys(usersDB).length > 0;
   state.needsAdminSetup = !hasUsers;
   showAuthOverlay();
@@ -4055,7 +4054,7 @@ function jsEscape(str) {
 // ==================== USERS MANAGEMENT ====================
 let _pendingUserAction = null;
 
-async function openUsersModal() {
+function openUsersModal() {
   if (!isAdmin()) return;
   document.getElementById('usersModal').classList.add('active');
   document.getElementById('usersModalMsg').innerHTML = '';
@@ -4067,7 +4066,7 @@ async function openUsersModal() {
   document.getElementById('newUserUsername').value = '';
   document.getElementById('newUserPass').value = '';
   document.getElementById('newUserRole').value = 'viewer';
-  await loadUsersList();
+  loadUsersList();
 }
 
 function closeUsersModal() {
@@ -4108,13 +4107,13 @@ async function handleCreateUser() {
   if (pass.length < 6) { msgEl.innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#f8d7da;color:#721c24;font-size:.85rem"><i class="fas fa-times"></i> La contraseña debe tener al menos 6 caracteres.</div>'; return; }
 
   var usernameKey = username.toLowerCase().trim();
-  if (await getUserDoc(usernameKey)) {
+  if (getUserDoc(usernameKey)) {
     msgEl.innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#fff3cd;color:#856404;font-size:.85rem;border:1px solid #ffeeba"><i class="fas fa-exclamation-triangle"></i> El usuario <strong>@' + usernameKey + '</strong> ya existe. Elige otro.</div>';
     return;
   }
 
   var hashedPass = await hashPassword(pass);
-  await setUserDoc(usernameKey, {
+  setUserDoc(usernameKey, {
     name: name,
     username: usernameKey,
     passwordHash: hashedPass,
@@ -4132,13 +4131,13 @@ async function handleCreateUser() {
 
   var roleText = role === 'admin' ? 'Admin' : 'Usuario';
   msgEl.innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#d4edda;color:#155724;font-size:.85rem"><i class="fas fa-check"></i> Usuario <strong>' + escapeHtml(name) + '</strong> creado como <strong>' + roleText + '</strong>.</div>';
-  await loadUsersList();
+  loadUsersList();
 }
 
-async function loadUsersList() {
+function loadUsersList() {
   const container = document.getElementById('usersModalList');
   if (!container) return;
-  const allUsers = await getAllUsersSorted();
+  const allUsers = getAllUsersSorted();
   if (allUsers.length === 0) {
     container.innerHTML = '<div style="text-align:center;padding:1.5rem;color:#888">No hay usuarios registrados.</div>';
     return;
@@ -4199,14 +4198,14 @@ function confirmToggleRole(uid, username, newRole) {
   msgDiv.innerHTML = '';
 }
 
-async function executeToggleRole(uid, newRole) {
-  const userData = await getUserDoc(uid);
+function executeToggleRole(uid, newRole) {
+  const userData = getUserDoc(uid);
   if (!userData) {
     document.getElementById('usersModalMsg').innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#f8d7da;color:#721c24;font-size:.85rem"><i class="fas fa-times"></i> Usuario no encontrado.</div>';
     return;
   }
   userData.role = newRole;
-  await setUserDoc(uid, userData);
+  setUserDoc(uid, userData);
   if (state.user && state.user.uid === uid) {
     state.userRole = newRole;
     state.user.role = newRole;
@@ -4216,7 +4215,7 @@ async function executeToggleRole(uid, newRole) {
   }
   document.getElementById('usersModalConfirm').innerHTML = '';
   document.getElementById('usersModalMsg').innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#d4edda;color:#155724;font-size:.85rem"><i class="fas fa-check"></i> Rol actualizado correctamente.</div>';
-  await loadUsersList();
+  loadUsersList();
 }
 
 function confirmDeleteUser(uid, displayName) {
@@ -4233,11 +4232,11 @@ function confirmDeleteUser(uid, displayName) {
   document.getElementById('usersModalMsg').innerHTML = '';
 }
 
-async function executeDeleteUser(uid) {
-  await removeUserDoc(uid);
+function executeDeleteUser(uid) {
+  removeUserDoc(uid);
   document.getElementById('usersModalConfirm').innerHTML = '';
   document.getElementById('usersModalMsg').innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#d4edda;color:#155724;font-size:.85rem"><i class="fas fa-check"></i> Usuario eliminado correctamente.</div>';
-  await loadUsersList();
+  loadUsersList();
 }
 
 function cancelUserAction() {
