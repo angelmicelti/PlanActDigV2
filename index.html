@@ -845,7 +845,9 @@ function applyCourseTheme(cursoId) {
 
 // ==================== AUTH HELPERS ====================
 const AUTH_SESSION_KEY = 'planDigital_session';
-const USERS_COLLECTION = 'users';
+const APP_PREFIX = 'pad_'; // Plan de Actuación Digital — aísla datos de otras apps que compartan la BD
+const USERS_COLLECTION = APP_PREFIX + 'users';
+const PLANES_COLLECTION = APP_PREFIX + 'planes';
 
 async function hashPassword(password) {
   const encoder = new TextEncoder();
@@ -911,37 +913,10 @@ async function getAllUsersSorted() {
   }
 }
 
-// ==================== MIGRATE LOCAL USERS TO FIRESTORE ====================
-const OLD_USERS_KEY = 'planDigital_users';
-
-async function migrateLocalUsersToCloud() {
-  try {
-    var raw = localStorage.getItem(OLD_USERS_KEY);
-    if (!raw) return;
-    var localDB = JSON.parse(raw);
-    var keys = Object.keys(localDB);
-    if (keys.length === 0) { localStorage.removeItem(OLD_USERS_KEY); return; }
-    console.log('[migrate] Migrando ' + keys.length + ' usuarios desde localStorage a Firestore...');
-    for (var i = 0; i < keys.length; i++) {
-      var uid = keys[i];
-      var existing = await db.collection(USERS_COLLECTION).doc(uid).get();
-      if (!existing.exists) {
-        await db.collection(USERS_COLLECTION).doc(uid).set(localDB[uid]);
-        await db.waitForPendingWrites();
-        console.log('[migrate] Usuario migrado: ' + uid);
-      } else {
-        console.log('[migrate] Usuario ya existe en la nube, se omite: ' + uid);
-      }
-    }
-    localStorage.removeItem(OLD_USERS_KEY);
-    console.log('[migrate] Migraci\u00f3n completada. localStorage limpiado.');
-  } catch (err) {
-    console.error('[migrate] Error durante la migraci\u00f3n:', err);
-  }
-}
-
-// Run migration on load
-migrateLocalUsersToCloud();
+// ==================== MIGRATE LOCAL USERS TO FIRESTORE (DISABLED) ====================
+// Migración deshabilitada: los usuarios locales antiguos usaban un formato de hash incompatible.
+// Además, la colección genérica 'users' se ha cambiado a 'pad_users' para evitar conflictos
+// con otras aplicaciones que comparten la misma base de datos Firestore.
 
 // Base list of predefined responsables (mutable — new entries can be added)
 let RESPONSABLES_BASE = [
@@ -1050,7 +1025,7 @@ function setConnectionStatus(connected) {
 
 async function checkConnection() {
   try {
-    await db.collection('planes').limit(1).get();
+    await db.collection(PLANES_COLLECTION).limit(1).get();
     setConnectionStatus(true);
   } catch (err) {
     setConnectionStatus(false);
@@ -1059,17 +1034,17 @@ async function checkConnection() {
 
 // ==================== SEED FUNCTION ====================
 async function seedCourse(cursoId) {
-  await db.collection('planes').doc(cursoId).set({ name: cursoId });
+  await db.collection(PLANES_COLLECTION).doc(cursoId).set({ name: cursoId });
   for (const ambitoId of AMBITOS) {
     const ambitoData = SEED_DATA[ambitoId];
     if (ambitoData) {
-      await db.collection('planes').doc(cursoId).collection('ambitos').doc(ambitoId).set({
+      await db.collection(PLANES_COLLECTION).doc(cursoId).collection('ambitos').doc(ambitoId).set({
         titulo: ambitoData.titulo,
         lineas: ambitoData.lineas
       });
     }
   }
-  await db.collection('planes').doc(cursoId).collection('estadosTareas').doc('global').set({ estados: {}, comentarios: {} });
+  await db.collection(PLANES_COLLECTION).doc(cursoId).collection('estadosTareas').doc('global').set({ estados: {}, comentarios: {} });
 }
 
 // ==================== CURRENT CURSO ====================
@@ -1180,7 +1155,21 @@ async function handleAuth() {
       const hashedPass = await hashPassword(pass);
       console.log('[login] Hash introducido: ' + hashedPass);
       console.log('[login] Hash almacenado: ' + (userData.passwordHash || 'NO EXISTE'));
-      if (userData.passwordHash !== hashedPass) {
+      var passwordOk = false;
+      if (userData.passwordHash === hashedPass) {
+        passwordOk = true;
+      } else if (userData.passwordHash && /^[0-9a-f]{64}$/.test(userData.passwordHash)) {
+        passwordOk = false;
+      } else {
+        // Compatibilidad: passwordHash puede estar en texto plano (versiones antiguas)
+        if (userData.passwordHash === pass) {
+          passwordOk = true;
+          console.log('[login] Contrase\u00f1a en texto plano detectada. Re-hasheando...');
+          userData.passwordHash = hashedPass;
+          await setUserDoc(usernameKey, userData);
+        }
+      }
+      if (!passwordOk) {
         errorEl.textContent = 'Usuario o contrase\u00f1a incorrectos.';
         errorEl.style.display = 'flex';
         btn.disabled = false;
@@ -1345,7 +1334,7 @@ setTimeout(() => {
 // ==================== LOAD COURSES ====================
 async function loadCourses() {
   try {
-    const snapshot = await db.collection('planes').get();
+    const snapshot = await db.collection(PLANES_COLLECTION).get();
     const courseList = [];
     snapshot.forEach(d => courseList.push(d.id));
     courseList.sort();
@@ -1393,7 +1382,7 @@ async function listenToCourseData() {
   state.loading = true;
 
   // Listen to ambitos
-  const ambitosUnsub = db.collection('planes').doc(state.currentCourse).collection('ambitos')
+  const ambitosUnsub = db.collection(PLANES_COLLECTION).doc(state.currentCourse).collection('ambitos')
     .onSnapshot(snapshot => {
       const data = {};
       snapshot.forEach(doc => {
@@ -1439,7 +1428,7 @@ async function listenToCourseData() {
     });
 
   // Listen to estados
-  const estadosUnsub = db.collection('planes').doc(state.currentCourse).collection('estadosTareas').doc('global')
+  const estadosUnsub = db.collection(PLANES_COLLECTION).doc(state.currentCourse).collection('estadosTareas').doc('global')
     .onSnapshot(doc => {
       if (doc.exists) {
         state.estadosTareas = doc.data().estados || {};
@@ -2439,7 +2428,7 @@ async function handleEstadoChange(taskId, estado) {
   const newEstados = { ...state.estadosTareas, [taskId]: estado };
   state.estadosTareas = newEstados;
   try {
-    await db.collection('planes').doc(state.currentCourse).collection('estadosTareas').doc('global').set({ estados: newEstados, comentarios: state.comentariosTareas }, { merge: true });
+    await db.collection(PLANES_COLLECTION).doc(state.currentCourse).collection('estadosTareas').doc('global').set({ estados: newEstados, comentarios: state.comentariosTareas }, { merge: true });
     renderView();
   } catch (err) {
     console.error('Error saving estado:', err);
@@ -2466,7 +2455,7 @@ async function handleComentarioChange(taskId, value) {
   }
   state.comentariosTareas = newComentarios;
   try {
-    await db.collection('planes').doc(state.currentCourse).collection('estadosTareas').doc('global').set({ estados: state.estadosTareas, comentarios: newComentarios }, { merge: true });
+    await db.collection(PLANES_COLLECTION).doc(state.currentCourse).collection('estadosTareas').doc('global').set({ estados: state.estadosTareas, comentarios: newComentarios }, { merge: true });
   } catch (err) {
     console.error('Error saving comentario:', err);
     const ta = document.getElementById('tareaComentario-' + taskId);
@@ -2556,12 +2545,12 @@ async function executeCourseAction() {
   try {
     if (type === 'delete') {
       // Delete all subcollections and the course document
-      const ambitosSnap = await db.collection('planes').doc(courseId).collection('ambitos').get();
+      const ambitosSnap = await db.collection(PLANES_COLLECTION).doc(courseId).collection('ambitos').get();
       const batch = db.batch();
       ambitosSnap.forEach(doc => batch.delete(doc.ref));
-      const estadosDoc = db.collection('planes').doc(courseId).collection('estadosTareas').doc('global');
+      const estadosDoc = db.collection(PLANES_COLLECTION).doc(courseId).collection('estadosTareas').doc('global');
       batch.delete(estadosDoc);
-      batch.delete(db.collection('planes').doc(courseId));
+      batch.delete(db.collection(PLANES_COLLECTION).doc(courseId));
       await batch.commit();
 
       // Update state
@@ -2580,11 +2569,11 @@ async function executeCourseAction() {
     } else if (type === 'clear') {
       // Clear all lineas and estados, keep ambito documents with empty arrays
       for (const ambitoId of AMBITOS) {
-        await db.collection('planes').doc(courseId).collection('ambitos').doc(ambitoId).update({
+        await db.collection(PLANES_COLLECTION).doc(courseId).collection('ambitos').doc(ambitoId).update({
           lineas: []
         });
       }
-      await db.collection('planes').doc(courseId).collection('estadosTareas').doc('global').set({ estados: {}, comentarios: {} });
+      await db.collection(PLANES_COLLECTION).doc(courseId).collection('estadosTareas').doc('global').set({ estados: {}, comentarios: {} });
 
       // If we're viewing this course, refresh
       if (state.currentCourse === courseId) {
@@ -2604,15 +2593,15 @@ async function executeCourseAction() {
 
 async function createEmptyCourse(cursoId) {
   // Create course root document + empty ambitos (no data — only seed 2025-2026)
-  await db.collection('planes').doc(cursoId).set({ name: cursoId });
+  await db.collection(PLANES_COLLECTION).doc(cursoId).set({ name: cursoId });
   for (const ambitoId of AMBITOS) {
     const ambitoInfo = AMBITO_INFO[ambitoId];
-    await db.collection('planes').doc(cursoId).collection('ambitos').doc(ambitoId).set({
+    await db.collection(PLANES_COLLECTION).doc(cursoId).collection('ambitos').doc(ambitoId).set({
       titulo: ambitoInfo.titulo,
       lineas: []
     });
   }
-  await db.collection('planes').doc(cursoId).collection('estadosTareas').doc('global').set({ estados: {}, comentarios: {} });
+  await db.collection(PLANES_COLLECTION).doc(cursoId).collection('estadosTareas').doc('global').set({ estados: {}, comentarios: {} });
 }
 
 async function handleCreateCourse() {
@@ -2628,7 +2617,7 @@ async function handleCreateCourse() {
     return;
   }
   try {
-    const doc = await db.collection('planes').doc(name).get();
+    const doc = await db.collection(PLANES_COLLECTION).doc(name).get();
     if (doc.exists) {
       msgEl.innerHTML = '<div class="modal-message error">Este curso ya existe</div>';
       return;
@@ -2716,10 +2705,10 @@ async function saveLinea() {
     };
     const newLineas = [...ambitoData.lineas, newLinea].sort((a, b) => a.id - b.id);
     try {
-      await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(state.currentAmbitoId).update({ lineas: newLineas });
+      await db.collection(PLANES_COLLECTION).doc(state.currentCourse).collection('ambitos').doc(state.currentAmbitoId).update({ lineas: newLineas });
       closeEditModal();
       // Navigate to the new line's detail view
-      const freshSnap = await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(state.currentAmbitoId).get();
+      const freshSnap = await db.collection(PLANES_COLLECTION).doc(state.currentCourse).collection('ambitos').doc(state.currentAmbitoId).get();
       const freshData = freshSnap.data();
       if (freshData) {
         state.planData[state.currentAmbitoId] = freshData;
@@ -2740,7 +2729,7 @@ async function saveLinea() {
       return l;
     });
     try {
-      await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(state.currentAmbitoId).update({ lineas: newLineas });
+      await db.collection(PLANES_COLLECTION).doc(state.currentCourse).collection('ambitos').doc(state.currentAmbitoId).update({ lineas: newLineas });
       // Update local state
       if (state.currentLinea && state.currentLinea.id === state.editingLinea.id) {
         state.currentLinea = { ...state.currentLinea, titulo: titulo, descripcion: descripcion, steam4: steam4 };
@@ -2807,7 +2796,7 @@ async function saveNewActuacion() {
 
   try {
     // Read latest from Firestore to avoid conflicts
-    const ambitoDoc = await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(ambitoId).get();
+    const ambitoDoc = await db.collection(PLANES_COLLECTION).doc(state.currentCourse).collection('ambitos').doc(ambitoId).get();
     const ambitoSnap = ambitoDoc.data();
     if (!ambitoSnap || !ambitoSnap.lineas) {
       msgEl.innerHTML = '<div class="modal-message error">Error: no se encontraron datos del ámbito</div>';
@@ -2835,7 +2824,7 @@ async function saveNewActuacion() {
       lineas[lineaIdx].tareasIntervencion = [...(lineas[lineaIdx].tareasIntervencion || []), newAct];
     }
 
-    await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(ambitoId).update({ lineas });
+    await db.collection(PLANES_COLLECTION).doc(state.currentCourse).collection('ambitos').doc(ambitoId).update({ lineas });
 
     // Update local state
     state.planData[ambitoId] = ambitoSnap;
@@ -2876,7 +2865,7 @@ async function deleteLinea() {
   const renumbered = newLineas.map((l, i) => ({ ...l, id: i + 1 }));
 
   try {
-    await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(state.currentAmbitoId).update({ lineas: renumbered });
+    await db.collection(PLANES_COLLECTION).doc(state.currentCourse).collection('ambitos').doc(state.currentAmbitoId).update({ lineas: renumbered });
 
     const newEstados = { ...state.estadosTareas };
     const newComentarios = { ...state.comentariosTareas };
@@ -2907,7 +2896,7 @@ async function deleteLinea() {
         }
       }
     });
-    await db.collection('planes').doc(state.currentCourse).collection('estadosTareas').doc('global').set({ estados: newEstados, comentarios: newComentarios });
+    await db.collection(PLANES_COLLECTION).doc(state.currentCourse).collection('estadosTareas').doc('global').set({ estados: newEstados, comentarios: newComentarios });
     state.estadosTareas = newEstados;
     state.comentariosTareas = newComentarios;
 
@@ -2982,14 +2971,14 @@ async function handleTransfer() {
 
   try {
     // Get source ambito data
-    const srcDoc = await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(ambitoId).get();
+    const srcDoc = await db.collection(PLANES_COLLECTION).doc(state.currentCourse).collection('ambitos').doc(ambitoId).get();
     if (!srcDoc.exists) {
       msgEl.innerHTML = '<div class="modal-message error">Ámbito de origen no encontrado</div>';
       return;
     }
 
     // Get target ambito data (may not exist for empty courses)
-    const tgtDoc = await db.collection('planes').doc(targetCourse).collection('ambitos').doc(ambitoId).get();
+    const tgtDoc = await db.collection(PLANES_COLLECTION).doc(targetCourse).collection('ambitos').doc(ambitoId).get();
     const tgtLines = tgtDoc.exists ? (tgtDoc.data().lineas || []) : [];
 
     const srcData = srcDoc.data();
@@ -3017,7 +3006,7 @@ async function handleTransfer() {
     const merged = [...tgtLines, ...newLines].sort((a, b) => a.id - b.id);
 
     // Use set with merge to create or update the ambito document
-    await db.collection('planes').doc(targetCourse).collection('ambitos').doc(ambitoId).set({
+    await db.collection(PLANES_COLLECTION).doc(targetCourse).collection('ambitos').doc(ambitoId).set({
       titulo: AMBITO_INFO[ambitoId].titulo,
       lineas: merged
     }, { merge: true });
@@ -3274,7 +3263,7 @@ function ensureEvaluaciones(linea) {
 // ==================== GLOBAL CATALOG (cross-course) ====================
 async function loadGlobalCatalogos() {
   try {
-    const doc = await db.collection('planes').doc('_config').collection('catalogos').doc('global').get();
+    const doc = await db.collection(PLANES_COLLECTION).doc('_config').collection('catalogos').doc('global').get();
     if (doc.exists) {
       const data = doc.data();
       // Merge global responsables with base list (deduplicated)
@@ -3303,7 +3292,7 @@ async function saveGlobalCatalogoItem(type, value) {
   if (!value || !value.trim()) return;
   const trimmed = value.trim();
   try {
-    const docRef = db.collection('planes').doc('_config').collection('catalogos').doc('global');
+    const docRef = db.collection(PLANES_COLLECTION).doc('_config').collection('catalogos').doc('global');
     await db.runTransaction(async (transaction) => {
       const doc = await transaction.get(docRef);
       let data = doc.exists ? doc.data() : {};
@@ -3339,7 +3328,7 @@ async function saveGlobalCatalogoItem(type, value) {
 async function removeGlobalCatalogoItem(type, value) {
   if (!value) return;
   try {
-    const docRef = db.collection('planes').doc('_config').collection('catalogos').doc('global');
+    const docRef = db.collection(PLANES_COLLECTION).doc('_config').collection('catalogos').doc('global');
     const doc = await docRef.get();
     let data = doc.exists ? doc.data() : {};
     let arr = data[type] || [];
@@ -3443,7 +3432,7 @@ async function executeDeleteActuacion(taskId) {
   if (idx < 0) return;
 
   try {
-    const ambitoDoc = await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(ambitoId).get();
+    const ambitoDoc = await db.collection(PLANES_COLLECTION).doc(state.currentCourse).collection('ambitos').doc(ambitoId).get();
     const ambitoSnap = ambitoDoc.data();
     if (!ambitoSnap || !ambitoSnap.lineas) return;
     const lineas = ambitoSnap.lineas;
@@ -3453,7 +3442,7 @@ async function executeDeleteActuacion(taskId) {
     const fieldKey = taskType === 'formacion' ? 'tareasFormacion' : 'tareasIntervencion';
     lineas[lineaIdx][fieldKey].splice(idx, 1);
 
-    await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(ambitoId).update({ lineas });
+    await db.collection(PLANES_COLLECTION).doc(state.currentCourse).collection('ambitos').doc(ambitoId).update({ lineas });
 
     // Clean up estadosTareas for this specific task and renumber remaining
     const newEstados = { ...state.estadosTareas };
@@ -3477,7 +3466,7 @@ async function executeDeleteActuacion(taskId) {
         }
       }
     });
-    await db.collection('planes').doc(state.currentCourse).collection('estadosTareas').doc('global').set({ estados: newEstados, comentarios: newComentarios });
+    await db.collection(PLANES_COLLECTION).doc(state.currentCourse).collection('estadosTareas').doc('global').set({ estados: newEstados, comentarios: newComentarios });
     state.estadosTareas = newEstados;
     state.comentariosTareas = newComentarios;
 
@@ -3533,7 +3522,7 @@ async function saveActEval(taskId) {
 
   // Save to Firestore
   try {
-    const ambitoDoc = await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(ambitoId).get();
+    const ambitoDoc = await db.collection(PLANES_COLLECTION).doc(state.currentCourse).collection('ambitos').doc(ambitoId).get();
     const ambitoSnap = ambitoDoc.data();
     if (!ambitoSnap || !ambitoSnap.lineas) return;
     const lineas = ambitoSnap.lineas;
@@ -3548,7 +3537,7 @@ async function saveActEval(taskId) {
       evaluacion: { responsables, herramientas, temporalizacion, alumnado }
     };
 
-    await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(ambitoId).update({ lineas });
+    await db.collection(PLANES_COLLECTION).doc(state.currentCourse).collection('ambitos').doc(ambitoId).update({ lineas });
     state.editingActEval = null;
 
     // Update local state
@@ -4040,7 +4029,7 @@ async function saveEvalChipChange(taskId, fieldType, oldValue, newValue) {
   const mapping = getFieldMapping(fieldType);
 
   try {
-    const ambitoDoc = await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(ambitoId).get();
+    const ambitoDoc = await db.collection(PLANES_COLLECTION).doc(state.currentCourse).collection('ambitos').doc(ambitoId).get();
     const ambitoSnap = ambitoDoc.data();
     if (!ambitoSnap || !ambitoSnap.lineas) return;
     const lineas = ambitoSnap.lineas;
@@ -4078,7 +4067,7 @@ async function saveEvalChipChange(taskId, fieldType, oldValue, newValue) {
     }
     evalData[mapping.dataKey] = arr;
     lineas[lineaIdx][fieldKey][idx] = { texto, evaluacion: evalData };
-    await db.collection('planes').doc(state.currentCourse).collection('ambitos').doc(ambitoId).update({ lineas });
+    await db.collection(PLANES_COLLECTION).doc(state.currentCourse).collection('ambitos').doc(ambitoId).update({ lineas });
     state.planData[ambitoId] = ambitoSnap;
     if (state.currentLinea && state.currentLinea.id === lineaId) {
       state.currentLinea = lineas[lineaIdx];
@@ -4363,20 +4352,20 @@ async function exportJSON() {
     };
 
     // Export all courses
-    const coursesSnap = await db.collection('planes').get();
+    const coursesSnap = await db.collection(PLANES_COLLECTION).get();
     const batchPromises = [];
     coursesSnap.forEach(courseDoc => {
       const courseId = courseDoc.id;
       if (courseId === '_config') return; // skip config
       const p = (async () => {
-        const ambitosSnap = await db.collection('planes').doc(courseId).collection('ambitos').get();
+        const ambitosSnap = await db.collection(PLANES_COLLECTION).doc(courseId).collection('ambitos').get();
         const ambitos = {};
         ambitosSnap.forEach(a => { ambitos[a.id] = a.data(); });
 
         let estados = {};
         let comentarios = {};
         try {
-          const estDoc = await db.collection('planes').doc(courseId).collection('estadosTareas').doc('global').get();
+          const estDoc = await db.collection(PLANES_COLLECTION).doc(courseId).collection('estadosTareas').doc('global').get();
           if (estDoc.exists) {
             estados = estDoc.data().estados || {};
             comentarios = estDoc.data().comentarios || {};
@@ -4391,7 +4380,7 @@ async function exportJSON() {
 
     // Export global catalogs
     try {
-      const catDoc = await db.collection('planes').doc('_config').collection('catalogos').doc('global').get();
+      const catDoc = await db.collection(PLANES_COLLECTION).doc('_config').collection('catalogos').doc('global').get();
       if (catDoc.exists) exportData.catalogos = catDoc.data();
     } catch(e) {}
 
@@ -4441,18 +4430,18 @@ async function handleImportJSON(event) {
     for (const courseId of courseIds) {
       const courseData = data.cursos[courseId];
       // Create course doc if not exists
-      await db.collection('planes').doc(courseId).set({ name: courseId }, { merge: true });
+      await db.collection(PLANES_COLLECTION).doc(courseId).set({ name: courseId }, { merge: true });
 
       // Import ambitos
       if (courseData.ambitos && typeof courseData.ambitos === 'object') {
         for (const [ambitoId, ambitoData] of Object.entries(courseData.ambitos)) {
-          await db.collection('planes').doc(courseId).collection('ambitos').doc(ambitoId).set(ambitoData);
+          await db.collection(PLANES_COLLECTION).doc(courseId).collection('ambitos').doc(ambitoId).set(ambitoData);
         }
       }
 
       // Import estados
       if (courseData.estados || courseData.comentarios) {
-        await db.collection('planes').doc(courseId).collection('estadosTareas').doc('global').set({
+        await db.collection(PLANES_COLLECTION).doc(courseId).collection('estadosTareas').doc('global').set({
           estados: courseData.estados || {},
           comentarios: courseData.comentarios || {}
         }, { merge: true });
@@ -4462,7 +4451,7 @@ async function handleImportJSON(event) {
 
     // Import global catalogs
     if (data.catalogos && typeof data.catalogos === 'object') {
-      await db.collection('planes').doc('_config').collection('catalogos').doc('global').set(data.catalogos, { merge: true });
+      await db.collection(PLANES_COLLECTION).doc('_config').collection('catalogos').doc('global').set(data.catalogos, { merge: true });
     }
 
     showToast('Importación completada: ' + coursesImported + ' curso(s) importado(s)', 'success');
