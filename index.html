@@ -799,13 +799,6 @@ const firebaseConfig = {
   measurementId: "G-GSF5682FYQ"
 };
 firebase.initializeApp(firebaseConfig);
-// Desactivar persistencia offline para garantizar que lecturas y escrituras
-// van siempre al servidor (evita que los datos se queden solo en cache local)
-firebase.firestore().disablePersistence().then(function() {
-  console.log('[Firestore] Persistencia offline desactivada correctamente.');
-}).catch(function(err) {
-  console.warn('[Firestore] No se pudo desactivar persistencia (puede que ya estuviera desactivada):', err.message);
-});
 const db = firebase.firestore();
 
 // ==================== CONSTANTS ====================
@@ -864,19 +857,19 @@ async function hashPassword(password) {
 
 async function getUsersDB() {
   try {
-    const snapshot = await db.collection(USERS_COLLECTION).get();
+    const snapshot = await db.collection(USERS_COLLECTION).get({ source: 'server' });
     const usersDB = {};
-    snapshot.forEach(doc => { usersDB[doc.id] = doc.data(); });
+    snapshot.forEach(function(doc) { usersDB[doc.id] = doc.data(); });
     return usersDB;
   } catch (err) {
     console.error('[getUsersDB] Error accediendo a Firestore:', err);
-    throw new Error('Error de conexi\u00f3n a la nube: no se pudieron leer los usuarios. Verifica las reglas de seguridad de Firestore para la colecci\u00f3n \"users\". Detalle: ' + err.message);
+    throw new Error('Error de conexi\u00f3n a la nube: no se pudieron leer los usuarios. Detalle: ' + err.message);
   }
 }
 
 async function getUserDoc(usernameKey, throwOnError) {
   try {
-    const doc = await db.collection(USERS_COLLECTION).doc(usernameKey).get();
+    const doc = await db.collection(USERS_COLLECTION).doc(usernameKey).get({ source: 'server' });
     return doc.exists ? doc.data() : null;
   } catch (err) {
     console.error('[getUserDoc] Error accediendo a Firestore:', err);
@@ -888,14 +881,8 @@ async function getUserDoc(usernameKey, throwOnError) {
 async function setUserDoc(usernameKey, userData) {
   try {
     await db.collection(USERS_COLLECTION).doc(usernameKey).set(userData);
-    // Esperar a que el servidor confirme la escritura
     await db.waitForPendingWrites();
-    // Verificar que el documento realmente existe en el servidor
-    var verify = await db.collection(USERS_COLLECTION).doc(usernameKey).get({ source: 'server' });
-    if (!verify.exists) {
-      throw new Error('El documento no se guard\u00f3 en el servidor. Verifica tu conexi\u00f3n.');
-    }
-    console.log('[setUserDoc] Usuario ' + usernameKey + ' verificado en el servidor.');
+    console.log('[setUserDoc] Usuario ' + usernameKey + ' guardado y sincronizado con el servidor.');
   } catch (err) {
     console.error('[setUserDoc] Error guardando en Firestore:', err);
     throw err;
@@ -905,6 +892,7 @@ async function setUserDoc(usernameKey, userData) {
 async function removeUserDoc(usernameKey) {
   try {
     await db.collection(USERS_COLLECTION).doc(usernameKey).delete();
+    await db.waitForPendingWrites();
   } catch (err) {
     console.error('[removeUserDoc] Error borrando de Firestore:', err);
     throw err;
@@ -913,10 +901,10 @@ async function removeUserDoc(usernameKey) {
 
 async function getAllUsersSorted() {
   try {
-    const snapshot = await db.collection(USERS_COLLECTION).get();
+    const snapshot = await db.collection(USERS_COLLECTION).get({ source: 'server' });
     const users = [];
-    snapshot.forEach(doc => { users.push({ uid: doc.id, ...doc.data() }); });
-    return users.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+    snapshot.forEach(function(doc) { users.push({ uid: doc.id, name: doc.data().name, username: doc.data().username, role: doc.data().role, createdAt: doc.data().createdAt, passwordHash: doc.data().passwordHash }); });
+    return users.sort(function(a, b) { return (a.createdAt || 0) - (b.createdAt || 0); });
   } catch (err) {
     console.error('[getAllUsersSorted] Error accediendo a Firestore:', err);
     return [];
@@ -936,9 +924,10 @@ async function migrateLocalUsersToCloud() {
     console.log('[migrate] Migrando ' + keys.length + ' usuarios desde localStorage a Firestore...');
     for (var i = 0; i < keys.length; i++) {
       var uid = keys[i];
-      var existing = await db.collection(USERS_COLLECTION).doc(uid).get();
+      var existing = await db.collection(USERS_COLLECTION).doc(uid).get({ source: 'server' });
       if (!existing.exists) {
         await db.collection(USERS_COLLECTION).doc(uid).set(localDB[uid]);
+        await db.waitForPendingWrites();
         console.log('[migrate] Usuario migrado: ' + uid);
       } else {
         console.log('[migrate] Usuario ya existe en la nube, se omite: ' + uid);
@@ -1444,7 +1433,7 @@ async function listenToCourseData() {
   // Listen to estados
   const estadosUnsub = db.collection('planes').doc(state.currentCourse).collection('estadosTareas').doc('global')
     .onSnapshot(doc => {
-      if (doc.exists()) {
+      if (doc.exists) {
         state.estadosTareas = doc.data().estados || {};
         state.comentariosTareas = doc.data().comentarios || {};
         renderView();
