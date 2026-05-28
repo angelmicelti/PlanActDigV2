@@ -1317,6 +1317,8 @@ async function loadCourses() {
     if (portal) portal.style.background = 'var(--gradient)';
     await loadGlobalCatalogos();
     await listenToCourseData();
+    // Show portal (it may have been hidden by showAuthOverlay during login)
+    if (portal) { portal.style.display = 'flex'; portal.classList.remove('fade-out'); }
     // Show dynamic portal for 5 seconds, then auto-enter
     startPortalCountdown();
   } catch (err) {
@@ -4410,13 +4412,8 @@ async function handleImportJSON(event) {
 }
 
 // ==================== INIT ====================
-(async function init() {
-  document.getElementById('portalCurso').textContent = 'Cargando...';
-  // Show auth overlay initially
-  showAuthOverlay();
-  // Auth state change listener will trigger loadCourses after successful login
-  await checkConnection();
-})();
+// restoreSession() (line ~1274) already handles showing auth overlay or restoring session.
+// No extra init needed here.
 
 // ==================== SERVICE WORKER REGISTRATION ====================
 if ('serviceWorker' in navigator) {
