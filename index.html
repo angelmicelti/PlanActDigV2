@@ -843,7 +843,9 @@ function applyCourseTheme(cursoId) {
 
 // ==================== AUTH HELPERS ====================
 const AUTH_SESSION_KEY = 'planDigital_session';
-const USERS_COLLECTION = 'users';
+const APP_PREFIX = 'pad_';
+const USERS_COLLECTION = APP_PREFIX + 'users';
+const PLANES_COLLECTION = APP_PREFIX + 'planes';
 
 async function hashPassword(password) {
   const encoder = new TextEncoder();
