@@ -1386,7 +1386,7 @@ async function listenToCourseData() {
   // Listen to estados
   const estadosUnsub = db.collection(PLANES_COLLECTION).doc(state.currentCourse).collection('estadosTareas').doc('global')
     .onSnapshot(doc => {
-      if (doc.exists()) {
+      if (doc.exists) {
         state.estadosTareas = doc.data().estados || {};
         state.comentariosTareas = doc.data().comentarios || {};
         renderView();
