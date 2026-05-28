@@ -13,9 +13,8 @@
 <link rel="apple-touch-icon" href="pwa/icons/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="pwa/icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="pwa/icons/favicon-16.png">
-<link rel="preconnect" href="https://www.gstatic.com" crossorigin>
-<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"></noscript>
 <style>
 :root{--primary-color:#3498db;--secondary-color:#2c3e50;--accent-color:#e74c3c;--light-color:#ecf0f1;--dark-color:#34495e;--success-color:#2ecc71;--warning-color:#f39c12;--steam-color:#9b59b6;--steam-light:#bb8fce;--gradient:linear-gradient(135deg,#3498db,#2c3e50);--steam-gradient:linear-gradient(135deg,#9b59b6,#8e44ad);--card-shadow:0 10px 20px rgba(0,0,0,.1);--hover-shadow:0 15px 30px rgba(0,0,0,.15);--theme-name:'Azul'}
 body,header,nav,.portal-inicio,.ambito-card,.detalle-linea,.linea-badge,.tarea-item,.btn-primary,.nav-btn,.section-title,.info-card,.filtro-btn.active,.gestion-btn.cursos,.gestion-btn.datos,.add-linea-btn,.resp-chip.selected,.course-select{transition:background-color .5s ease,border-color .5s ease,color .3s ease,box-shadow .5s ease}
@@ -39,10 +38,6 @@ body{background:linear-gradient(135deg,#f5f7fa 0%,#e4e8ed 100%);color:#333;line-
 .portal-progress.active{animation:portalProgress 5s linear forwards}
 @keyframes portalProgress{0%{width:0}100%{width:100%}}
 @keyframes pulse{0%{opacity:.6}50%{opacity:1}100%{opacity:.6}}
-.loading-dots span{animation:dotFade 1.4s infinite;opacity:0}
-.loading-dots span:nth-child(2){animation-delay:.2s}
-.loading-dots span:nth-child(3){animation-delay:.4s}
-@keyframes dotFade{0%,80%,100%{opacity:0}40%{opacity:1}}
 .theme-indicator{position:fixed;bottom:1rem;left:1rem;z-index:5000;display:flex;align-items:center;gap:.4rem;padding:.3rem .7rem;border-radius:16px;background:var(--primary-color);box-shadow:0 2px 10px rgba(0,0,0,.2);font-size:.7rem;font-weight:600;color:#fff;opacity:.85;transition:all .5s ease;pointer-events:none}
 .theme-indicator i{font-size:.65rem}
 .firebase-status-integrated{display:flex;align-items:center;gap:.35rem;font-size:.7rem;color:#888}
@@ -476,9 +471,6 @@ nav::-webkit-scrollbar{display:none}
     <button id="authBtn" onclick="handleAuth()" class="auth-btn primary">
       <i class="fas fa-sign-in-alt"></i> Iniciar Sesión
     </button>
-    <p id="authCloudStatus" style="text-align:center;color:#aaa;font-size:.75rem;margin-top:1rem">
-      <i class="fas fa-shield-alt"></i> Datos almacenados en la nube
-    </p>
   </div>
 </div>
 
@@ -490,7 +482,7 @@ nav::-webkit-scrollbar{display:none}
   <div class="portal-bg-shape"></div>
   <div class="portal-titulo">PLAN DE ACTUACIÓN DIGITAL</div>
   <div class="portal-subtitulo">IES Virgen de Villadiego</div>
-  <div class="portal-curso" id="portalCurso">Cargando<span class="loading-dots"><span>.</span><span>.</span><span>.</span></span></div>
+  <div class="portal-curso" id="portalCurso">Cargando...</div>
   <div class="portal-instruccion"><span class="portal-tap-hint">Haz clic en cualquier parte para continuar</span></div>
   <div class="portal-progress" id="portalProgress"></div>
 </div>
@@ -790,30 +782,9 @@ nav::-webkit-scrollbar{display:none}
 <!-- CDN Scripts -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
-<script>
-// ==================== LAZY LOAD jsPDF ====================
-let _jspdfLoaded = false;
-let _jspdfPromise = null;
-function loadJsPDF() {
-  if (_jspdfLoaded) return Promise.resolve();
-  if (_jspdfPromise) return _jspdfPromise;
-  _jspdfPromise = new Promise((resolve, reject) => {
-    const s1 = document.createElement('script');
-    s1.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-    s1.onload = () => {
-      const s2 = document.createElement('script');
-      s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js';
-      s2.onload = () => { _jspdfLoaded = true; resolve(); };
-      s2.onerror = () => { _jspdfPromise = null; reject(new Error('No se pudo cargar jsPDF-autotable')); };
-      document.head.appendChild(s2);
-    };
-    s1.onerror = () => { _jspdfPromise = null; reject(new Error('No se pudo cargar jsPDF')); };
-    document.head.appendChild(s1);
-  });
-  return _jspdfPromise;
-}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
 
-</script>
 <script>
 // ==================== FIREBASE INIT ====================
 const firebaseConfig = {
@@ -872,9 +843,7 @@ function applyCourseTheme(cursoId) {
 
 // ==================== AUTH HELPERS ====================
 const AUTH_SESSION_KEY = 'planDigital_session';
-const APP_PREFIX = 'pad_'; // Plan de Actuación Digital — aísla datos de otras apps que compartan la BD
-const USERS_COLLECTION = APP_PREFIX + 'users';
-const PLANES_COLLECTION = APP_PREFIX + 'planes';
+const USERS_COLLECTION = 'users';
 
 async function hashPassword(password) {
   const encoder = new TextEncoder();
@@ -888,11 +857,11 @@ async function getUsersDB() {
   try {
     const snapshot = await db.collection(USERS_COLLECTION).get();
     const usersDB = {};
-    snapshot.forEach(function(doc) { usersDB[doc.id] = doc.data(); });
+    snapshot.forEach(doc => { usersDB[doc.id] = doc.data(); });
     return usersDB;
   } catch (err) {
     console.error('[getUsersDB] Error accediendo a Firestore:', err);
-    throw new Error('Error de conexi\u00f3n a la nube: no se pudieron leer los usuarios. Detalle: ' + err.message);
+    throw new Error('Error de conexi\u00f3n a la nube: no se pudieron leer los usuarios. Verifica las reglas de seguridad de Firestore para la colecci\u00f3n \"users\". Detalle: ' + err.message);
   }
 }
 
@@ -910,8 +879,6 @@ async function getUserDoc(usernameKey, throwOnError) {
 async function setUserDoc(usernameKey, userData) {
   try {
     await db.collection(USERS_COLLECTION).doc(usernameKey).set(userData);
-    await db.waitForPendingWrites();
-    console.log('[setUserDoc] Usuario ' + usernameKey + ' guardado y sincronizado.');
   } catch (err) {
     console.error('[setUserDoc] Error guardando en Firestore:', err);
     throw err;
@@ -921,7 +888,6 @@ async function setUserDoc(usernameKey, userData) {
 async function removeUserDoc(usernameKey) {
   try {
     await db.collection(USERS_COLLECTION).doc(usernameKey).delete();
-    await db.waitForPendingWrites();
   } catch (err) {
     console.error('[removeUserDoc] Error borrando de Firestore:', err);
     throw err;
@@ -932,18 +898,13 @@ async function getAllUsersSorted() {
   try {
     const snapshot = await db.collection(USERS_COLLECTION).get();
     const users = [];
-    snapshot.forEach(function(doc) { users.push({ uid: doc.id, name: doc.data().name, username: doc.data().username, role: doc.data().role, createdAt: doc.data().createdAt, passwordHash: doc.data().passwordHash }); });
-    return users.sort(function(a, b) { return (a.createdAt || 0) - (b.createdAt || 0); });
+    snapshot.forEach(doc => { users.push({ uid: doc.id, ...doc.data() }); });
+    return users.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
   } catch (err) {
     console.error('[getAllUsersSorted] Error accediendo a Firestore:', err);
     return [];
   }
 }
-
-// ==================== MIGRATE LOCAL USERS TO FIRESTORE (DISABLED) ====================
-// Migración deshabilitada: los usuarios locales antiguos usaban un formato de hash incompatible.
-// Además, la colección genérica 'users' se ha cambiado a 'pad_users' para evitar conflictos
-// con otras aplicaciones que comparten la misma base de datos Firestore.
 
 // Base list of predefined responsables (mutable — new entries can be added)
 let RESPONSABLES_BASE = [
@@ -1169,9 +1130,7 @@ async function handleAuth() {
       }
     } else {
       // --- LOGIN NORMAL ---
-      console.log('[login] Buscando usuario: "' + usernameKey + '"');
       const userData = await getUserDoc(usernameKey, true);
-      console.log('[login] Resultado getUserDoc:', userData ? 'encontrado (campos: ' + Object.keys(userData).join(', ') + ')' : 'NO encontrado');
       if (!userData) {
         errorEl.textContent = 'Usuario o contrase\u00f1a incorrectos.';
         errorEl.style.display = 'flex';
@@ -1180,23 +1139,7 @@ async function handleAuth() {
         return;
       }
       const hashedPass = await hashPassword(pass);
-      console.log('[login] Hash introducido: ' + hashedPass);
-      console.log('[login] Hash almacenado: ' + (userData.passwordHash || 'NO EXISTE'));
-      var passwordOk = false;
-      if (userData.passwordHash === hashedPass) {
-        passwordOk = true;
-      } else if (userData.passwordHash && /^[0-9a-f]{64}$/.test(userData.passwordHash)) {
-        passwordOk = false;
-      } else {
-        // Compatibilidad: passwordHash puede estar en texto plano (versiones antiguas)
-        if (userData.passwordHash === pass) {
-          passwordOk = true;
-          console.log('[login] Contrase\u00f1a en texto plano detectada. Re-hasheando...');
-          userData.passwordHash = hashedPass;
-          await setUserDoc(usernameKey, userData);
-        }
-      }
-      if (!passwordOk) {
+      if (userData.passwordHash !== hashedPass) {
         errorEl.textContent = 'Usuario o contrase\u00f1a incorrectos.';
         errorEl.style.display = 'flex';
         btn.disabled = false;
@@ -1313,34 +1256,16 @@ async function restoreSession() {
 async function checkUsersAndShowAuth() {
   try {
     const usersDB = await getUsersDB();
-    const count = Object.keys(usersDB).length;
-    const usernames = Object.keys(usersDB);
-    console.log('[auth] Usuarios en Firestore (' + count + '):', usernames);
-    usernames.forEach(function(uid) {
-      var u = usersDB[uid];
-      console.log('[auth]   - @' + uid + ' | name=' + (u.name||'') + ' | role=' + (u.role||'') + ' | passwordHash=' + (u.passwordHash ? 'SI' : 'NO'));
-    });
-    const hasUsers = count > 0;
+    const hasUsers = Object.keys(usersDB).length > 0;
     state.needsAdminSetup = !hasUsers;
     showAuthOverlay();
-    // Mostrar diagnóstico en pantalla
-    var statusEl = document.getElementById('authCloudStatus');
-    if (statusEl) {
-      statusEl.innerHTML = '<i class="fas fa-cloud"></i> ' + count + ' usuario' + (count !== 1 ? 's' : '') + ' en la nube';
-      statusEl.style.color = count > 0 ? '#27ae60' : '#aaa';
-    }
   } catch (err) {
     console.error('[checkUsersAndShowAuth] Error:', err);
     showAuthOverlay();
     var errorEl = document.getElementById('authError');
     if (errorEl) {
-      errorEl.textContent = err.message || 'Error de conexión a la nube.';
+      errorEl.textContent = err.message || 'Error de conexi\\u00f3n a la nube.';
       errorEl.style.display = 'flex';
-    }
-    var statusEl = document.getElementById('authCloudStatus');
-    if (statusEl) {
-      statusEl.innerHTML = '<i class="fas fa-exclamation-triangle" style="color:#e74c3c"></i> Error de conexión a la nube';
-      statusEl.style.color = '#e74c3c';
     }
   }
 }
@@ -1457,7 +1382,7 @@ async function listenToCourseData() {
   // Listen to estados
   const estadosUnsub = db.collection(PLANES_COLLECTION).doc(state.currentCourse).collection('estadosTareas').doc('global')
     .onSnapshot(doc => {
-      if (doc.exists) {
+      if (doc.exists()) {
         state.estadosTareas = doc.data().estados || {};
         state.comentariosTareas = doc.data().comentarios || {};
         renderView();
@@ -1508,9 +1433,6 @@ document.getElementById('portalInicio').addEventListener('click', function() {
 function showAuthOverlay() {
   const overlay = document.getElementById('authOverlay');
   if (!overlay) return;
-  // Ocultar el portal para que no bloquee el login
-  var portal = document.getElementById('portalInicio');
-  if (portal) portal.style.display = 'none';
   overlay.style.display = 'flex';
   // Reset form state
   document.getElementById('authError').style.display = 'none';
@@ -3105,9 +3027,6 @@ async function generarPDF() {
   }
 
   try {
-    state.pdfMessage = { text: 'Cargando generador de PDF...', type: 'info' };
-    renderView();
-    await loadJsPDF();
     const { jsPDF } = window.jspdf;
     const docPdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
@@ -4216,7 +4135,6 @@ async function handleCreateUser() {
   if (!/^[a-zA-Z0-9_]+$/.test(username)) { msgEl.innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#f8d7da;color:#721c24;font-size:.85rem"><i class="fas fa-times"></i> Solo letras, números y guiones bajos.</div>'; return; }
   if (pass.length < 6) { msgEl.innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#f8d7da;color:#721c24;font-size:.85rem"><i class="fas fa-times"></i> La contraseña debe tener al menos 6 caracteres.</div>'; return; }
 
-  try {
   var usernameKey = username.toLowerCase().trim();
   if (await getUserDoc(usernameKey)) {
     msgEl.innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#fff3cd;color:#856404;font-size:.85rem;border:1px solid #ffeeba"><i class="fas fa-exclamation-triangle"></i> El usuario <strong>@' + usernameKey + '</strong> ya existe. Elige otro.</div>';
@@ -4243,10 +4161,6 @@ async function handleCreateUser() {
   var roleText = role === 'admin' ? 'Admin' : 'Usuario';
   msgEl.innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#d4edda;color:#155724;font-size:.85rem"><i class="fas fa-check"></i> Usuario <strong>' + escapeHtml(name) + '</strong> creado como <strong>' + roleText + '</strong>.</div>';
   await loadUsersList();
-  } catch (err) {
-    console.error('[handleCreateUser] Error:', err);
-    msgEl.innerHTML = '<div style="padding:.5rem;border-radius:8px;text-align:center;background:#f8d7da;color:#721c24;font-size:.85rem"><i class="fas fa-times"></i> Error al guardar en la nube: ' + escapeHtml(err.message) + '</div>';
-  }
 }
 
 async function loadUsersList() {
