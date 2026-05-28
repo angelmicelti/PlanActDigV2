@@ -167,44 +167,6 @@ nav::-webkit-scrollbar{display:none}
 @keyframes alumDupPulse{0%,100%{opacity:1}50%{opacity:.5}}
 .alumnado-view-section{margin-top:.6rem;padding:.6rem .8rem;background:rgba(142,68,173,.04);border-radius:8px;border:1px solid rgba(142,68,173,.1)}
 .alumnado-view-label{font-size:.78rem;font-weight:600;color:#8e44ad;margin-bottom:.4rem;display:flex;align-items:center;gap:.35rem}
-/* === INFORME ALUMNADO === */
-.informe-header{text-align:center;margin-bottom:1.5rem}
-.informe-subtitle{color:#777;font-size:.95rem;margin-top:.3rem}
-.informe-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1rem;margin-bottom:1.5rem}
-@media(max-width:640px){.informe-stats{grid-template-columns:repeat(2,1fr)}}
-.informe-stat-card{background:#fff;border-radius:12px;padding:1.2rem;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.06);border:1px solid #eee;transition:transform .2s}
-.informe-stat-card:hover{transform:translateY(-2px)}
-.informe-stat-number{font-size:2rem;font-weight:800;color:#8e44ad;line-height:1.2}
-.informe-stat-label{font-size:.8rem;color:#888;font-weight:600;margin-top:.3rem;text-transform:uppercase;letter-spacing:.5px}
-.informe-controls{display:flex;gap:.8rem;margin-bottom:1.5rem;flex-wrap:wrap;align-items:center}
-.informe-search{position:relative;flex:1;min-width:200px}
-.informe-search i{position:absolute;left:.8rem;top:50%;transform:translateY(-50%);color:#aaa;font-size:.85rem}
-.informe-search input{width:100%;padding:.6rem .8rem .6rem 2.2rem;border:1px solid #ddd;border-radius:8px;font-size:.9rem;transition:all .3s;font-family:inherit}
-.informe-search input:focus{border-color:#8e44ad;box-shadow:0 0 0 2px rgba(142,68,173,.15);outline:none}
-.informe-filter-chips{display:flex;gap:.4rem}
-.alum-filter-chip{padding:.45rem .9rem;border:1.5px solid #ddd;border-radius:20px;background:#fff;font-size:.8rem;font-weight:600;color:#666;cursor:pointer;transition:all .2s;font-family:inherit}
-.alum-filter-chip:hover{border-color:#8e44ad;color:#8e44ad}
-.alum-filter-chip.active{background:#8e44ad;color:#fff;border-color:#8e44ad}
-.informe-empty{text-align:center;padding:3rem 1rem;color:#999}
-.informe-empty p{margin-top:.8rem;font-size:.95rem}
-.informe-student-card{background:#fff;border-radius:12px;margin-bottom:.8rem;box-shadow:0 2px 8px rgba(0,0,0,.05);border:1px solid #eee;overflow:hidden;transition:all .2s}
-.informe-student-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08)}
-.informe-student-card.alum-multi{border-left:4px solid #e74c3c}
-.informe-student-header{display:flex;align-items:center;gap:.8rem;padding:1rem 1.2rem}
-.informe-student-avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:1.1rem;flex-shrink:0}
-.informe-student-info{flex:1;min-width:0}
-.informe-student-name{font-size:1rem;font-weight:700;color:#2c3e50;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.informe-student-count{font-size:.8rem;color:#888;font-weight:500}
-.informe-multi-badge{display:inline-flex;align-items:center;gap:.3rem;padding:.25rem .6rem;border-radius:12px;font-size:.7rem;font-weight:600;color:#e74c3c;background:rgba(231,76,60,.08);border:1px solid rgba(231,76,60,.2);white-space:nowrap;animation:alumDupPulse 2s infinite}
-.informe-student-projects{padding:0 1.2rem 1rem;display:flex;flex-direction:column;gap:.5rem}
-.informe-proj-item{padding:.7rem .9rem;background:#f8f9fa;border-radius:8px;border:1px solid #eee;transition:all .15s}
-.informe-proj-item:hover{background:#f0f1f5;border-color:#ddd}
-.informe-proj-badges{display:flex;gap:.4rem;margin-bottom:.3rem;flex-wrap:wrap}
-.informe-proj-ambito{font-size:.7rem;font-weight:600;padding:.15rem .5rem;border-radius:10px;border:1px solid;background:transparent}
-.informe-proj-tipo{font-size:.7rem;font-weight:600;display:inline-flex;align-items:center;gap:.25rem}
-.informe-proj-nombre{font-size:.9rem;font-weight:600;color:#2c3e50;margin-bottom:.15rem}
-.informe-proj-nombre:hover{color:#8e44ad}
-.informe-proj-task{font-size:.8rem;color:#777;line-height:1.3}
 @keyframes chipIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:scale(1)}}
 .info-add-row{display:flex;gap:.35rem;margin-top:.4rem}
 .info-add-row select{flex:1;padding:.45rem .6rem;border:1px solid #ddd;border-radius:6px;font-size:.85rem;background:#fff;transition:all .3s;font-family:inherit;min-width:0}
@@ -532,7 +494,6 @@ nav::-webkit-scrollbar{display:none}
       <button class="gestion-btn cursos" onclick="openCourseModal()"><i class="fas fa-calendar-plus"></i> Gestión de Cursos</button>
       <button class="gestion-btn transferir" onclick="openTransferModal()"><i class="fas fa-exchange-alt"></i> Transferir líneas</button>
       <button class="gestion-btn consultas" onclick="goConsultas()"><i class="fas fa-search"></i> Consultas</button>
-      <button class="gestion-btn" style="background:#8e44ad;color:#fff" onclick="goInformes()"><i class="fas fa-user-graduate"></i> Informe de Alumnado</button>
       <button class="gestion-btn pdf" onclick="goPdf()"><i class="fas fa-file-pdf"></i> Exportar PDF</button>
       <button class="gestion-btn" style="background:#2c3e50;color:#fff" onclick="openUsersModal()"><i class="fas fa-users-cog"></i> Gestión de Usuarios</button>
       <button class="gestion-btn" style="background:#16a085;color:#fff" onclick="exportJSON()"><i class="fas fa-download"></i> Exportar JSON</button>
@@ -1524,14 +1485,6 @@ function goPdf() {
   renderView();
 }
 
-function goInformes() {
-  state.viewState = 'informes';
-  state.gestionOpen = false;
-  document.getElementById('gestionToggle').classList.remove('open');
-  document.getElementById('gestionButtons').classList.remove('open');
-  renderView();
-}
-
 function toggleGestion() {
   state.gestionOpen = !state.gestionOpen;
   document.getElementById('gestionToggle').classList.toggle('open', state.gestionOpen);
@@ -1574,7 +1527,6 @@ function renderView() {
     case 'steam': renderSteam(container); break;
     case 'consultas': renderConsultas(container); break;
     case 'pdf': renderPdf(container); break;
-    case 'informes': renderAlumnadoInforme(container); break;
   }
 }
 
@@ -2154,225 +2106,6 @@ function renderPdf(container) {
         <button class="btn-primary" onclick="generarPDF()" style="background:#e74c3c"><i class="fas fa-file-pdf"></i> Generar PDF</button>
       </div>
     </div>`;
-}
-
-// ==================== RENDER: INFORME ALUMNADO ====================
-function renderAlumnadoInforme(container) {
-  // Recopilar todos los alumnos y sus proyectos de todos los ámbitos y líneas
-  const studentMap = {}; // nombreLower -> { display, projects: [{ambito, ambitoLabel, linea, lineaLabel, taskLabel, tipo}] }
-
-  if (!state.planData) {
-    container.innerHTML = '<p>No hay datos disponibles. Carga un curso primero.</p>';
-    return;
-  }
-
-  const ambitos = Object.keys(state.planData);
-  if (ambitos.length === 0) {
-    container.innerHTML = '<p>No hay datos del plan de actuación para el curso actual.</p>';
-    return;
-  }
-
-  // Contadores generales
-  let totalStudents = 0;
-  let totalParticipations = 0;
-  let studentsWithMultiple = 0;
-
-  for (const ambitoId of ambitos) {
-    const ambitoData = state.planData[ambitoId];
-    if (!ambitoData || !ambitoData.lineas) continue;
-    const ambitoLabel = (AMBITO_INFO[ambitoId] && AMBITO_INFO[ambitoId].titulo) || ambitoId;
-
-    for (const linea of ambitoData.lineas) {
-      if (!linea) continue;
-      const lineaLabel = linea.titulo || 'Sin título';
-
-      // Recorrer tareas de formación
-      const formacionTasks = linea.tareasFormacion || [];
-      for (let i = 0; i < formacionTasks.length; i++) {
-        const t = formacionTasks[i];
-        const alumList = (t && typeof t === 'object' && t.evaluacion && t.evaluacion.alumnado) || [];
-        const taskLabel = (typeof t === 'string') ? t : (t.texto || 'Tarea ' + (i + 1));
-        for (const name of alumList) {
-          const key = name.trim().toLowerCase();
-          if (!key) continue;
-          if (!studentMap[key]) {
-            studentMap[key] = { display: name.trim(), projects: [] };
-            totalStudents++;
-          }
-          studentMap[key].projects.push({
-            ambito: ambitoId,
-            ambitoLabel: ambitoLabel,
-            linea: linea.id || '',
-            lineaLabel: lineaLabel,
-            taskLabel: taskLabel,
-            tipo: 'formacion'
-          });
-          totalParticipations++;
-        }
-      }
-
-      // Recorrer tareas de intervención
-      const intervTasks = linea.tareasIntervencion || [];
-      for (let i = 0; i < intervTasks.length; i++) {
-        const t = intervTasks[i];
-        const alumList = (t && typeof t === 'object' && t.evaluacion && t.evaluacion.alumnado) || [];
-        const taskLabel = (typeof t === 'string') ? t : (t.texto || 'Actuación ' + (i + 1));
-        for (const name of alumList) {
-          const key = name.trim().toLowerCase();
-          if (!key) continue;
-          if (!studentMap[key]) {
-            studentMap[key] = { display: name.trim(), projects: [] };
-            totalStudents++;
-          }
-          studentMap[key].projects.push({
-            ambito: ambitoId,
-            ambitoLabel: ambitoLabel,
-            linea: linea.id || '',
-            lineaLabel: lineaLabel,
-            taskLabel: taskLabel,
-            tipo: 'intervencion'
-          });
-          totalParticipations++;
-        }
-      }
-    }
-  }
-
-  // Ordenar por número de participaciones (desc) y luego por nombre
-  const sortedStudents = Object.values(studentMap).sort((a, b) => {
-    if (b.projects.length !== a.projects.length) return b.projects.length - a.projects.length;
-    return a.display.toLowerCase().localeCompare(b.display.toLowerCase(), 'es');
-  });
-
-  // Contar alumnos con múltiples proyectos
-  for (const s of sortedStudents) {
-    if (s.projects.length >= 2) studentsWithMultiple++;
-  }
-
-  // Iconos y colores por tipo
-  const tipoIcon = { formacion: 'fas fa-chalkboard-teacher', intervencion: 'fas fa-tasks' };
-  const tipoLabel = { formacion: 'Formación', intervencion: 'Intervención' };
-  const tipoColor = { formacion: 'var(--primary-color)', intervencion: 'var(--success-color)' };
-  const ambitoColor = { organizacion: '#3498db', informacion: '#e67e22', procesos: '#27ae60' };
-
-  // Renderizar
-  let html = `
-    <div class="informe-header">
-      <h2 class="section-title"><i class="fas fa-user-graduate" style="color:#8e44ad"></i> Informe de Alumnado por Proyectos</h2>
-      <p class="informe-subtitle">Vista dinámica del alumnado participante y sus proyectos asociados.</p>
-    </div>
-
-    <div class="informe-stats">
-      <div class="informe-stat-card">
-        <div class="informe-stat-number">${totalStudents}</div>
-        <div class="informe-stat-label">Alumnos/as</div>
-      </div>
-      <div class="informe-stat-card">
-        <div class="informe-stat-number">${totalParticipations}</div>
-        <div class="informe-stat-label">Participaciones</div>
-      </div>
-      <div class="informe-stat-card">
-        <div class="informe-stat-number">${studentsWithMultiple}</div>
-        <div class="informe-stat-label">En 2+ proyectos</div>
-      </div>
-      <div class="informe-stat-card">
-        <div class="informe-stat-number">${totalStudents > 0 ? (totalParticipations / totalStudents).toFixed(1) : '0'}</div>
-        <div class="informe-stat-label">Media / alumno</div>
-      </div>
-    </div>
-
-    <div class="informe-controls">
-      <div class="informe-search">
-        <i class="fas fa-search"></i>
-        <input type="text" id="alumnadoSearch" placeholder="Buscar alumno/a..." oninput="filterAlumnadoInforme(this.value)">
-      </div>
-      <div class="informe-filter-chips">
-        <button class="alum-filter-chip active" data-filter="all" onclick="setAlumnadoFilter('all', this)">Todos</button>
-        <button class="alum-filter-chip" data-filter="multi" onclick="setAlumnadoFilter('multi', this)">2+ proyectos</button>
-      </div>
-    </div>
-
-    <div id="alumnadoInformeList">
-  `;
-
-  if (sortedStudents.length === 0) {
-    html += `
-      <div class="informe-empty">
-        <i class="fas fa-user-graduate" style="font-size:3rem;color:#ccc"></i>
-        <p>No se ha registrado alumnado en ninguna actuación.</p>
-        <p style="font-size:.85rem;color:#999">Para añadir alumnado, edita la evaluación de una actuación e introduce los nombres.</p>
-      </div>
-    `;
-  } else {
-    for (const student of sortedStudents) {
-      const isMulti = student.projects.length >= 2;
-      const firstProject = student.projects[0];
-      const ambitoClr = ambitoColor[firstProject.ambito] || '#999';
-      let proyectosHtml = '';
-
-      for (const proj of student.projects) {
-        const aClr = ambitoColor[proj.ambito] || '#999';
-        proyectosHtml += `
-          <div class="informe-proj-item">
-            <div class="informe-proj-badges">
-              <span class="informe-proj-ambito" style="color:${aClr};border-color:${aClr}">${escapeHtml(proj.ambitoLabel)}</span>
-              <span class="informe-proj-tipo" style="color:${tipoColor[proj.tipo]}">
-                <i class="${tipoIcon[proj.tipo]}"></i> ${tipoLabel[proj.tipo]}
-              </span>
-            </div>
-            <div class="informe-proj-nombre" style="cursor:pointer" onclick="goAmbito('${proj.ambito}')" title="Ir a la línea">${escapeHtml(proj.lineaLabel)}</div>
-            <div class="informe-proj-task">${escapeHtml(proj.taskLabel)}</div>
-          </div>
-        `;
-      }
-
-      html += `
-        <div class="informe-student-card alum-filter-item${isMulti ? ' alum-multi' : ''}" data-name="${escapeAttr(student.display.toLowerCase())}" data-count="${student.projects.length}">
-          <div class="informe-student-header">
-            <div class="informe-student-avatar" style="background:${ambitoClr}">
-              ${student.display.charAt(0).toUpperCase()}
-            </div>
-            <div class="informe-student-info">
-              <div class="informe-student-name">${escapeHtml(student.display)}</div>
-              <div class="informe-student-count">${student.projects.length} proyecto${student.projects.length !== 1 ? 's' : ''}</div>
-            </div>
-            ${isMulti ? '<span class="informe-multi-badge"><i class="fas fa-exclamation-triangle"></i> Multiproyecto</span>' : ''}
-          </div>
-          <div class="informe-student-projects">
-            ${proyectosHtml}
-          </div>
-        </div>
-      `;
-    }
-  }
-
-  html += '</div>';
-  container.innerHTML = html;
-}
-
-// Filtro de búsqueda en tiempo real para el informe
-function filterAlumnadoInforme(query) {
-  const q = query.toLowerCase().trim();
-  document.querySelectorAll('.alum-filter-item').forEach(function(card) {
-    const name = card.dataset.name || '';
-    const match = !q || name.includes(q);
-    card.style.display = match ? '' : 'none';
-  });
-}
-
-// Filtro por tipo (todos / multiproyecto)
-function setAlumnadoFilter(filter, btnEl) {
-  document.querySelectorAll('.alum-filter-chip').forEach(function(b) { b.classList.remove('active'); });
-  if (btnEl) btnEl.classList.add('active');
-
-  document.querySelectorAll('.alum-filter-item').forEach(function(card) {
-    const count = parseInt(card.dataset.count) || 0;
-    if (filter === 'multi') {
-      card.style.display = count >= 2 ? '' : 'none';
-    } else {
-      card.style.display = '';
-    }
-  });
 }
 
 // ==================== ESTADO CHANGE ====================
