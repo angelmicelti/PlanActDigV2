@@ -1893,6 +1893,50 @@ function setTaskFilter(filter) {
 
 // ==================== RENDER: STEAM ====================
 function renderSteam(container) {
+  // Gather all steam4 lines grouped by ámbito
+  const steamLineas = [];
+  let totalSteamLines = 0;
+  AMBITOS.forEach(ambitoId => {
+    const ambito = state.planData[ambitoId];
+    if (!ambito) return;
+    const info = AMBITO_INFO[ambitoId];
+    const filtered = ambito.lineas.filter(l => l.steam4);
+    if (filtered.length > 0) {
+      steamLineas.push({ ambitoId, info, lineas: filtered });
+      totalSteamLines += filtered.length;
+    }
+  });
+
+  let lineasHtml = '';
+  steamLineas.forEach(group => {
+    lineasHtml += `<div class="steam-integration" style="margin-bottom:2rem">
+      <h3><i class="${group.info.icon}"></i> ${escapeHtml(group.info.titulo)}</h3>
+      <ul class="lineas-list" style="margin-top:1rem">
+        ${group.lineas.map(linea => `
+        <li class="linea-item" onclick="goSteamLineaDetalle('${group.ambitoId}', ${escapeAttr(JSON.stringify(linea))})">
+          <div class="linea-badge" style="background:var(--steam-color)">${linea.id}</div>
+          <div style="flex:1">
+            <div style="font-weight:600;margin-bottom:.3rem">${escapeHtml(linea.titulo)}</div>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+              <span class="badge badge-steam"><i class="fas fa-robot"></i> STEAM 4.0</span>
+            </div>
+          </div>
+          ${isAdmin() ? `<div class="linea-actions">
+            <button class="linea-action-btn edit" onclick="event.stopPropagation();openEditSteamLinea('${group.ambitoId}', ${escapeAttr(JSON.stringify(linea))}, false)" title="Editar"><i class="fas fa-edit"></i></button>
+            <button class="linea-action-btn delete" onclick="event.stopPropagation();confirmDeleteSteamLinea('${group.ambitoId}', ${escapeAttr(JSON.stringify(linea))})" title="Eliminar"><i class="fas fa-trash"></i></button>
+          </div>` : ''}
+        </li>`).join('')}
+      </ul>
+    </div>`;
+  });
+
+  if (totalSteamLines === 0) {
+    lineasHtml = `<div class="steam-integration" style="margin-bottom:2rem">
+      <h3><i class="fas fa-info-circle"></i> Líneas del Plan de Actuación Digital vinculadas a STEAM 4.0</h3>
+      <p style="margin-top:1rem;color:#888;text-align:center;padding:2rem">No hay líneas de actuación vinculadas al Proyecto STEAM 4.0 en este curso.</p>
+    </div>`;
+  }
+
   container.innerHTML = `
     <div class="steam-hero">
       <h2>Proyecto STEAM 4.0</h2>
@@ -1938,7 +1982,28 @@ function renderSteam(container) {
         <li><i class="fas fa-palette"></i> Arte: Diseño digital y creatividad</li>
         <li><i class="fas fa-pen-fancy"></i> Lengua: Comunicación de proyectos</li>
       </ul>
-    </div>`;
+    </div>
+    ${totalSteamLines > 0 ? `<h2 class="section-title steam" style="margin-top:3rem;margin-bottom:1.5rem">
+      <i class="fas fa-link"></i> Líneas del Plan de Actuación Digital vinculadas a STEAM 4.0
+      <span class="lineas-count" style="background:var(--steam-color)">${totalSteamLines} línea${totalSteamLines !== 1 ? 's' : ''}</span>
+    </h2>` : ''}
+    ${lineasHtml}`;
+}
+
+// ==================== STEAM LINEA HELPER FUNCTIONS ====================
+function goSteamLineaDetalle(ambitoId, linea) {
+  state.currentAmbitoId = ambitoId;
+  goLineaDetalle(linea);
+}
+
+function openEditSteamLinea(ambitoId, linea, isNew) {
+  state.currentAmbitoId = ambitoId;
+  openEditLinea(linea, isNew);
+}
+
+function confirmDeleteSteamLinea(ambitoId, linea) {
+  state.currentAmbitoId = ambitoId;
+  confirmDeleteLinea(linea);
 }
 
 // ==================== RENDER: CONSULTAS ====================
